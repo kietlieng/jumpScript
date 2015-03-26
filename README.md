@@ -1,0 +1,1 @@
+# JumpScript as a bash program to help commandline developers create anchor points for navigation purposes.
