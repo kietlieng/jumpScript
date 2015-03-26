@@ -1,0 +1,46 @@
+export jumpDir="$HOME/jumpDir"
+alias pwda="pwd -P"
+
+export JUMPSCRIPTDIR=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
+echo $JUMPSCRIPTDIR
+# main jump command if no arguements are present list the jump commands
+j () {
+  if [ "$1" ]
+  then
+    if [ "$1" = "help" ]
+    then
+      cat "$JUMPSCRIPTDIR/jumpScriptHelp.txt"
+    else
+      cd $jumpDir/$1*
+    fi
+  else
+    jlist
+  fi
+}
+
+# list jump commands
+jlist () {
+  ls -l $jumpDir | grep "\->"
+}
+
+# add symbo link to jump script
+jadd () {
+  currentLocation=`pwd -P`
+  if [ "$1" ]
+  then
+    if [ "$2" ]
+    then
+      /bin/ln -s $currentLocation/$1 $jumpDir/$2   
+    else
+      /bin/ln -s $currentLocation $jumpDir/$1
+    fi
+  fi
+}
+
+# remove symbol link
+jremove () {
+  if [ "$1" ]
+  then
+    rm "$jumpDir/$1"
+  fi
+}

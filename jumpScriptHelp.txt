@@ -1,0 +1,8 @@
+j [jumpPoint]
+    if no arguements are provide a jump point list will be provided
+jlist
+	list current jump links possible
+jadd name [folder]
+	if no folder is provided the jump will add the current location as the folder
+jremove name
+	removes the current jump point
