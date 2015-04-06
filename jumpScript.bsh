@@ -1,18 +1,38 @@
-export jumpDir="$HOME/jumpDir"
-alias pwda="pwd -P"
-
+# figure out where you will be putting the jump drive location
 export JUMPSCRIPTDIR=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
-echo $JUMPSCRIPTDIR
+
+# jump drive directory name file
+export JUMPDIRNAME=".jumpDir"
+
 # main jump command if no arguements are present list the jump commands
 j () {
+  # check to see if directory exists
   if [ "$1" ]
   then
     if [ "$1" = "help" ]
     then
       cat "$JUMPSCRIPTDIR/jumpScriptHelp.txt"
+      echo "\n"
     else
+      jumDirectoryExists
+      # quit if directory doesn not exists
+      if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
+      then
+        return
+      fi 
       cd $jumpDir/$1*
+      # cleaner pwd without the relative path softlink issue.  The trade off is two change directory commands instead of 1.
+      cd $(pwd -P)
     fi
+    shift
+    # this will keep iterating through the arguements and diving into the next directory
+    # example j xx a b c 
+    # this above with use symbol link xx then try to change directory into a* then b* then c*
+    while [ "$1" ]
+    do
+        cd $1*
+        shift
+    done
   else
     jlist
   fi
@@ -20,27 +40,55 @@ j () {
 
 # list jump commands
 jlist () {
-  ls -l $jumpDir | grep "\->"
+  jumDirectoryExists
+  if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
+  then
+    return
+  fi
+  # we only want to print out symbol links.  We should be able to store things like files is here also, although I do not know why
+  ls -l $JUMPSCRIPTDIR/$JUMPDIRNAME | grep "\->"
 }
 
-# add symbo link to jump script
+# add symbol link to jump script
 jadd () {
-  currentLocation=`pwd -P`
+  jumDirectoryExists
+  if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
+  then
+    return
+  fi
+  currentLocation=`pwd`
   if [ "$1" ]
   then
     if [ "$2" ]
     then
-      /bin/ln -s $currentLocation/$1 $jumpDir/$2   
+      /bin/ln -s $currentLocation/$1 $JUMPSCRIPTDIR/$JUMPDIRNAME/$2   
     else
-      /bin/ln -s $currentLocation $jumpDir/$1
+      /bin/ln -s $currentLocation $JUMPSCRIPTDIR/$JUMPDIRNAME/$1
     fi
   fi
 }
 
 # remove symbol link
 jremove () {
-  if [ "$1" ]
+  if [ -e "$JUMPSCRIPTDIR/$JUMPDIRNAME/$1" ]
   then
-    rm "$jumpDir/$1"
+    rm "$JUMPSCRIPTDIR/$JUMPDIRNAME/$1"
+  else 
+    echo "This symlink doesn't exists in location $JUMPSCRIPTDIR/$JUMPDIRNAME"
   fi
+}
+
+# prompt user if symbol link exists
+jumDirectoryExists() {
+    if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
+    then
+        echo "I see the directory doesn't exist would you like to create $JUMPDIRNAME in location $JUMSCRIPTDIR ? [y/n]: "
+        read response
+        if [ $response = "y" ]
+        then
+            mkdir $JUMPSCRIPTDIR/$JUMPDIRNAME
+        else 
+            return 1
+        fi
+    fi
 }
