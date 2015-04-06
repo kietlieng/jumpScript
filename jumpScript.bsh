@@ -20,7 +20,7 @@ j () {
       then
         return
       fi 
-      cd $jumpDir/$1*
+      cd $JUMPSCRIPTDIR/$JUMPDIRNAME/$1*
       # cleaner pwd without the relative path softlink issue.  The trade off is two change directory commands instead of 1.
       cd $(pwd -P)
     fi
