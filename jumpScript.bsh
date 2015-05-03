@@ -14,15 +14,15 @@ j () {
       cat "$JUMPSCRIPTDIR/jumpScriptHelp.txt"
       echo "\n"
     else
-      jumDirectoryExists
+      jumpDirectoryExists
       # quit if directory doesn not exists
       if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
       then
         return
-      fi 
+      fi
       cd $JUMPSCRIPTDIR/$JUMPDIRNAME/$1*
       # cleaner pwd without the relative path softlink issue.  The trade off is two change directory commands instead of 1.
-      cd $(pwd -P)
+      cd "$(pwd -P)"
     fi
     shift
     # this will keep iterating through the arguements and diving into the next directory
@@ -40,7 +40,7 @@ j () {
 
 # list jump commands
 jlist () {
-  jumDirectoryExists
+  jumpDirectoryExists
   if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
   then
     return
@@ -51,7 +51,7 @@ jlist () {
 
 # add symbol link to jump script
 jadd () {
-  jumDirectoryExists
+  jumpDirectoryExists
   if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
   then
     return
@@ -61,9 +61,9 @@ jadd () {
   then
     if [ "$2" ]
     then
-      /bin/ln -s $currentLocation/$1 $JUMPSCRIPTDIR/$JUMPDIRNAME/$2   
+      /bin/ln -s $currentLocation/$1 $JUMPSCRIPTDIR/$JUMPDIRNAME/$2
     else
-      /bin/ln -s $currentLocation $JUMPSCRIPTDIR/$JUMPDIRNAME/$1
+      /bin/ln -s "$currentLocation" $JUMPSCRIPTDIR/$JUMPDIRNAME/$1
     fi
   fi
 }
@@ -79,7 +79,7 @@ jremove () {
 }
 
 # prompt user if symbol link exists
-jumDirectoryExists() {
+jumpDirectoryExists() {
     if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
     then
         echo "I see the directory doesn't exist would you like to create $JUMPDIRNAME in location $JUMSCRIPTDIR ? [y/n]: "
