@@ -46,7 +46,7 @@ jlist () {
     return
   fi
   # we only want to print out symbol links.  We should be able to store things like files is here also, although I do not know why
-  ls -l $JUMPSCRIPTDIR/$JUMPDIRNAME | grep "\->"
+  ls -l $JUMPSCRIPTDIR/$JUMPDIRNAME | grep "\->" | cut -c 50-
 }
 
 # add symbol link to jump script

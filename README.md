@@ -1,4 +1,4 @@
-# JumpScript as a bash program to help commandline developers create anchor points for navigation purposes.
+# JumpScript is a bash program to help commandline developers create anchor points for navigation purposes.
 <ol>
     <li>drop both files into any directory</li>
     <li>open up your .profile / .bash_profile / .bashrc</li>
