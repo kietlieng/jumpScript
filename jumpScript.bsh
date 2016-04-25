@@ -20,7 +20,8 @@ j () {
       then
         return
       fi
-      cd $JUMPSCRIPTDIR/$JUMPDIRNAME/$1*
+      
+      cd $(ls $JUMPSCRIPTDIR/$JUMPDIRNAME/$1* | head -n 1)
       # cleaner pwd without the relative path softlink issue.  The trade off is two change directory commands instead of 1.
       cd "$(pwd -P)"
     fi
@@ -83,7 +84,8 @@ jremove () {
 jumpDirectoryExists() {
     if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
     then
-        echo "I see the directory doesn't exist would you like to create $JUMPDIRNAME in location $JUMSCRIPTDIR ? [y/n]: "
+		echo $JUMPSCRIPTDIR
+		echo "I see the directory doesn't exist would you like to create $JUMPDIRNAME in location $JUMSCRIPTDIR ? [y/n]: "
         read response
         if [ $response = "y" ]
         then
