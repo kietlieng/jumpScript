@@ -1,5 +1,7 @@
 # figure out where you will be putting the jump drive location
-export JUMPSCRIPTDIR=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
+#export JUMPSCRIPTDIR=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
+export JUMPSCRIPTDIR=`cd "$( dirname "${(%):-%N}" )" && pwd`
+#export JUMPSCRIPTDIR=`~/scripts`
 
 # jump drive directory name file
 export JUMPDIRNAME=".jumpDir"
@@ -27,9 +29,9 @@ j () {
     fi
     shift
     # this will keep iterating through the arguements and diving into the next directory
-    # example j xx a b c
+    # example j xx a b c 
     # this above with use symbol link xx then try to change directory into a* then b* then c*
-
+     
     while [ "$1" ]
     do
         cd $(ls -d $1* | head -n 1)
@@ -73,7 +75,7 @@ jadd () {
 
 # remove symbol link
 jremove () {
-  if [ -e "$JUMPSCRIPTDIR/$JUMPDIRNAME/$1" ]
+  if [ -L "$JUMPSCRIPTDIR/$JUMPDIRNAME/$1" ]
   then
     rm "$JUMPSCRIPTDIR/$JUMPDIRNAME/$1"
   else 
@@ -95,4 +97,12 @@ jumpDirectoryExists() {
             return 1
         fi
     fi
+}
+
+# fetch
+jfetch() {
+  CURRENTDIR=$(PWD)
+  cd $JUMPSCRIPTDIR/$JUMPDIRNAME/$1*
+  cp $2 $CURRENTDIR
+  cd $CURRENTDIR 
 }
