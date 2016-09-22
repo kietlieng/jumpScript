@@ -32,7 +32,8 @@ j () {
       export SOMEPATH="$(ls -d $JUMPSCRIPTDIR/$JUMPDIRNAME/$1* 2> /dev/null | head -n 1)"
       if [ "$SOMEPATH" = "./" ]
 	  then
-		echo "no such path"
+		echo "no such path $1"
+        return
 	  else
        	cd $SOMEPATH
 	  fi
@@ -50,7 +51,8 @@ j () {
         export SOMEPATH="$(ls -d $1* 2> /dev/null | head -n 1)"
         if [ "$SOMEPATH" = "./" ]
 		then
-			echo "no such path"
+			echo "no such path $1"
+            return
 		else
         	cd $SOMEPATH
 		fi
