@@ -1,3 +1,4 @@
+setopt null_glob
 # figure out where you will be putting the jump drive location
 #export JUMPSCRIPTDIR=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
 export JUMPSCRIPTDIR=`cd "$( dirname "${(%):-%N}" )" && pwd`
@@ -23,7 +24,19 @@ j () {
         return
       fi
 
-      cd $(ls -d $JUMPSCRIPTDIR/$JUMPDIRNAME/$1* | head -n 1)
+      #DIRRESULT=$(ls -d $JUMPSCRIPTDIR/$JUMPDIRNAME/$1* 2> /dev/null | head -n 1)
+      #echo $DIRRESULT
+      #return
+
+      #cd $(ls -d $JUMPSCRIPTDIR/$JUMPDIRNAME/$1* | head -n 1)
+      export SOMEPATH="$(ls -d $JUMPSCRIPTDIR/$JUMPDIRNAME/$1* 2> /dev/null | head -n 1)"
+      if [ "$SOMEPATH" = "./" ]
+	  then
+		echo "no such path"
+	  else
+       	cd $SOMEPATH
+	  fi
+
       # cleaner pwd without the relative path softlink issue.  The trade off is two change directory commands instead of 1.
       cd "$(pwd -P)"
     fi
@@ -34,7 +47,13 @@ j () {
      
     while [ "$1" ]
     do
-        cd $(ls -d $1* | head -n 1)
+        export SOMEPATH="$(ls -d $1* 2> /dev/null | head -n 1)"
+        if [ "$SOMEPATH" = "./" ]
+		then
+			echo "no such path"
+		else
+        	cd $SOMEPATH
+		fi
         shift
     done
   else
