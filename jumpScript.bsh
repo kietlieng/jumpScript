@@ -12,7 +12,10 @@ j () {
   # check to see if directory exists
   if [ "$1" ]
   then
-    if [ "$1" = "help" ]
+    if [ "$1" = "list" ]
+    then
+      jlist
+    elif [ "$1" = "help" ]
     then
       cat "$JUMPSCRIPTDIR/jumpScriptHelp.txt"
       echo "\n"
