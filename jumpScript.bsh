@@ -61,6 +61,8 @@ j () {
 		fi
         shift
     done
+    pwd;
+    ls -ltr;
   else
     jlist
   fi
