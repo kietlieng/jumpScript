@@ -1,0 +1,13 @@
+#compdef j
+_j() {
+  _arguments '1: :->files'
+  case "$state" in
+      files)
+          # missing the first suggest value 
+          _values 'jump points' $(ls /Users/klieng/lab/scripts/.jumpDir/)
+          ;;
+  esac
+
+}
+
+_j "$@"
