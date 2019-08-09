@@ -8,7 +8,7 @@ export JUMPSCRIPTDIR=`cd "$( dirname "${(%):-%N}" )" && pwd`
 export JUMPDIRNAME=".jumpDir"
 
 # main jump command if no arguements are present list the jump commands
-j () {
+function j () {
   # check to see if directory exists
   if [ "$1" ]
   then
@@ -48,7 +48,6 @@ j () {
     # this will keep iterating through the arguements and diving into the next directory
     # example j xx a b c 
     # this above with use symbol link xx then try to change directory into a* then b* then c*
-     
     while [ "$1" ]
     do
         export SOMEPATH="$(ls -d $1* 2> /dev/null | head -n 1)"
@@ -69,7 +68,7 @@ j () {
 }
 
 # list jump commands
-jlist () {
+function jlist () {
   jumpDirectoryExists
   if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
   then
@@ -77,11 +76,12 @@ jlist () {
   fi
   # we only want to print out symbol links.  We should be able to store things like files is here also, although I do not know why
   #ls -l $JUMPSCRIPTDIR/$JUMPDIRNAME | grep "\->" | cut -c 50-
-  ls -l $JUMPSCRIPTDIR/$JUMPDIRNAME | grep "\->" | awk '{printf "%-1s %-2s %-3s \n", $9, $10, $11 }'
+  #ls -l $JUMPSCRIPTDIR/$JUMPDIRNAME | grep "\->" | awk '{printf "%-1s %-2s %-3s \n", $10, $11, $12 }'
+  ls -l $JUMPSCRIPTDIR/$JUMPDIRNAME | grep "\->" | awk '{printf "%-1s %-2s %-3s %-4s\n", $9, $10, $11, $12 }'
 }
 
 # add symbol link to jump script
-jadd () {
+function jadd () {
   jumpDirectoryExists
   if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
   then
@@ -100,7 +100,7 @@ jadd () {
 }
 
 # remove symbol link
-jremove () {
+function jremove () {
   if [ -L "$JUMPSCRIPTDIR/$JUMPDIRNAME/$1" ]
   then
     rm "$JUMPSCRIPTDIR/$JUMPDIRNAME/$1"
@@ -110,7 +110,7 @@ jremove () {
 }
 
 # prompt user if symbol link exists
-jumpDirectoryExists() {
+function jumpDirectoryExists() {
     if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
     then
 		echo $JUMPSCRIPTDIR
@@ -126,7 +126,7 @@ jumpDirectoryExists() {
 }
 
 # fetch
-jfetch() {
+function jfetch() {
   CURRENTDIR=$(PWD)
   cd $JUMPSCRIPTDIR/$JUMPDIRNAME/$1*
   cp $2 $CURRENTDIR
