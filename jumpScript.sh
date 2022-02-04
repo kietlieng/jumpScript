@@ -53,7 +53,7 @@ function j () {
     # this above with use symbol link xx then try to change directory into a* then b* then c*
     while [ "$1" ]
     do
-      if [ "$1" = "-" ]
+      if [ "$1" = "/" ]
       then
          export JUMP_FZF="true"
       else
@@ -75,17 +75,17 @@ function j () {
       # trim trailing white spaces
       export JUMP_OBJECT=${JUMP_OBJECT_RAW%?}
       #echo "jumpobject |$JUMP_OBJECT|"
-      export JUMP_FULLPATH=$(pwd)
-      #echo "full path is $JUMP_FULLPATH/$JUMP_OBJECT"
+      export JUMPPATH=$(pwd)
+      #echo "full path is $JUMPPATH/$JUMP_OBJECT"
       # check to see if it is a file
-      if [[ -d "${JUMP_FULLPATH}/${JUMP_OBJECT}" ]]; then
-        echo "object is directory $JUMP_FULLPATH/$JUMP_OBJECT"
+      if [[ -d "${JUMPPATH}/${JUMP_OBJECT}" ]]; then
+        #echo "object is directory $JUMPPATH/$JUMP_OBJECT"
         cd $JUMP_OBJECT
-      elif [[ -f "${JUMP_FULLPATH}/${JUMP_OBJECT}" ]]; then
-        echo "object is file $JUMP_FULLPATH/$JUMP_OBJECT"
+      elif [[ -f "${JUMPPATH}/${JUMP_OBJECT}" ]]; then
+        #echo "object is file $JUMPPATH/$JUMP_OBJECT"
         vim $JUMP_OBJECT
       else 
-        echo "full path is $JUMP_FULLPATH/$JUMP_OBJECT is nether file or directory"
+        echo "full path is $JUMPPATH/$JUMP_OBJECT is nether file or directory"
       fi
     fi
     pwd;
