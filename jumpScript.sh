@@ -7,6 +7,7 @@ export JUMPSCRIPTDIR=`cd "$( dirname "${(%):-%N}" )" && pwd`
 # jump drive directory name file
 export JUMPDIRNAME=".jumpDir"
 export JUMP_FZF="false"
+export JUMP_LAST=""
 
 # main jump command if no arguements are present list the jump commands
 function j () {
@@ -97,11 +98,12 @@ function j () {
     end=`date +%s`
   else
     jlist
+    ls -ltr;
   fi
 
-end=`date +%s`
-runtime=$((end-start))
-#echo "run time $runtime"
+  end=`date +%s`
+  runtime=$((end-start))
+  #echo "run time $runtime"
 }
 
 # list jump commands
@@ -168,4 +170,35 @@ function jfetch() {
   cd $JUMPSCRIPTDIR/$JUMPDIRNAME/$1*
   cp $2 $CURRENTDIR
   cd $CURRENTDIR 
+}
+
+# jump to last location
+function jj() {
+    cd `cat ~/.jumplast`
+}
+
+# mark working location
+function jw() {
+    if [[ $# -gt 0 ]]; then
+        # clear it
+        echo "" > ~/.jumplast
+    else
+        lastLocal=$(pwd)
+        echo "$lastLocal" > ~/.jumplast
+    fi
+}
+
+function jc() {
+    for x in `ls -lt1`;
+    do
+        # if it's a directory
+        if [ -d "$x" ];
+        then
+            echo "directory $x"
+            cd $x
+            ls -ltr
+            date
+            break
+        fi
+    done
 }
