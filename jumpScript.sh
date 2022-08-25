@@ -10,7 +10,7 @@ export JUMP_FZF="false"
 export JUMP_LAST=""
 
 # main jump command if no arguements are present list the jump commands
-function j () {
+function j() {
   export JUMP_FZF='false'
   start=`date +%s`
   # check to see if directory exists
@@ -50,7 +50,7 @@ function j () {
     fi
     shift
     # this will keep iterating through the arguements and diving into the next directory
-    # example j xx a b c 
+    # example j xx a b c
     # this above with use symbol link xx then try to change directory into a* then b* then c*
     while [ "$1" ]
     do
@@ -85,7 +85,7 @@ function j () {
       elif [[ -f "${JUMPPATH}/${JUMP_OBJECT}" ]]; then
         #echo "object is file $JUMPPATH/$JUMP_OBJECT"
         vim $JUMP_OBJECT
-      else 
+      else
         echo "full path is $JUMPPATH/$JUMP_OBJECT is nether file or directory"
       fi
     fi
@@ -93,6 +93,7 @@ function j () {
     if [ "$1" != "list" ]
     then
       ls -ltr;
+
       #ls
     fi
     end=`date +%s`
@@ -107,20 +108,19 @@ function j () {
 }
 
 # list jump commands
-function jlist () {
+function jlist() {
   jumpDirectoryExists
   if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
   then
     return
   fi
   # we only want to print out symbol links.  We should be able to store things like files is here also, although I do not know why
-  #ls -l $JUMPSCRIPTDIR/$JUMPDIRNAME | grep "\->" | cut -c 50-
-  #ls -l $JUMPSCRIPTDIR/$JUMPDIRNAME | grep "\->" | awk '{printf "%-1s %-2s %-3s \n", $10, $11, $12 }'
-  ls -l $JUMPSCRIPTDIR/$JUMPDIRNAME | grep "\->" | awk '{printf "%-1s %-2s %-3s %-4s\n", $9, $10, $11, $12 }'
+  # only print the last 3 columns
+  ls -l $JUMPSCRIPTDIR/$JUMPDIRNAME | grep "\->" | awk '{print $(NF-2) " " $(NF-1) " " $NF}'
 }
 
 # add symbol link to jump script
-function jadd () {
+function jadd() {
   jumpDirectoryExists
   if [ ! -d "$JUMPSCRIPTDIR/$JUMPDIRNAME" ]
   then
@@ -139,11 +139,11 @@ function jadd () {
 }
 
 # remove symbol link
-function jremove () {
+function jremove() {
   if [ -L "$JUMPSCRIPTDIR/$JUMPDIRNAME/$1" ]
   then
     rm "$JUMPSCRIPTDIR/$JUMPDIRNAME/$1"
-  else 
+  else
     echo "This symlink doesn't exists in location $JUMPSCRIPTDIR/$JUMPDIRNAME"
   fi
 }
@@ -158,7 +158,7 @@ function jumpDirectoryExists() {
     if [ $response = "y" ]
     then
       mkdir $JUMPSCRIPTDIR/$JUMPDIRNAME
-    else 
+    else
       return 1
     fi
   fi
@@ -169,7 +169,7 @@ function jfetch() {
   CURRENTDIR=$(PWD)
   cd $JUMPSCRIPTDIR/$JUMPDIRNAME/$1*
   cp $2 $CURRENTDIR
-  cd $CURRENTDIR 
+  cd $CURRENTDIR
 }
 
 # jump to last location
