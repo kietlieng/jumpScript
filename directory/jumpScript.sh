@@ -119,6 +119,10 @@ function jlist() {
   ls -l $JUMPSCRIPTDIR/$JUMPDIRNAME | grep "\->" | awk '{print $(NF-2) " " $(NF-1) " " $NF}'
 }
 
+function jf() {
+    jlist | grep -i "$1"
+}
+
 # add symbol link to jump script
 function jadd() {
   jumpDirectoryExists
