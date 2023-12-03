@@ -1,3 +1,5 @@
+#!/bin/bash
+
 royal_debug_me=0
 royal_last_is_switch=1
 royal_last_is_empty=1
@@ -5,16 +7,16 @@ royal_do_not_connect=0
 royal_list_command="echo "
 royal_delimiter_1="\^"
 royal_delimiter_2="\^"
-royal_last_command="/Users/klieng/lab/scripts/servers"
+royal_last_command=~/lab/scripts/mappings
 
 
-alias vilast="vim /Users/klieng/lab/scripts/servers/.jumplast"
+alias vijumplast="vim ~/lab/scripts/mappings/.jumplast"
 
-export royal_file_target=~/lab/scripts/servers/all.txt
-export royal_file_pass_target=~/lab/scripts/servers/passall.txt
-export royal_file_prod_target=~/lab/scripts/servers/prodall.txt
-export royal_file_prod_pass_target=~/lab/scripts/servers/passprodall.txt
-export royal_last_search_file=~/lab/scripts/servers/searchstring.txt
+export royal_file_target=~/lab/scripts/mappings/all.txt
+export royal_file_pass_target=~/lab/scripts/mappings/passall.txt
+export royal_file_prod_target=~/lab/scripts/mappings/prodall.txt
+export royal_file_prod_pass_target=~/lab/scripts/mappings/passprodall.txt
+export royal_last_search_file=~/lab/scripts/mappings/searchstring.txt
 
 function resetroyalsettings() {
     royal_debug_me=0
@@ -47,6 +49,40 @@ function nextIsEmpty() {
     debugme "is not empty"
 }
 
+#confluent cypher
+function flServe() {
+    serviceArg="$1"
+    serviceTypeArg="$2"
+    executeString=""
+
+    declare -A conArray
+    conArray[c]="confluent-kafka-connect.service"
+    conArray[k]="confluent-kafka.service"
+    conArray[r]="confluent-kafka-rest.service"
+    conArray[s]="confluent-schema-registry.service"
+    conArray[z]="confluent-zookeeper.service"
+
+    declare -A serviceArray
+    serviceArray[r]="restart"
+    serviceArray[s]="status"
+    serviceArray[st]="stop"
+
+    serviceType=$serviceArray[$serviceTypeArg]
+
+    if [[ $serviceArg = 'a' ]]; then
+        for key val in "${(@kv)conArray}"; do
+            executeString="$executeString sudo service $val $serviceType;"
+        done
+    else
+        for (( i=0; i< ${#serviceArg}; i++ )); do
+            serviceIndex="${serviceArg:$i:1}"
+            executeString="$executeString sudo service ${conArray[$serviceIndex]} $serviceType;"
+        done
+    fi
+
+    echo "$executeString"
+}
+
 function nextIsASwitch() {
     royal_last_is_switch=1
     if [[ $1 = -* ]] ;
@@ -58,7 +94,7 @@ function nextIsASwitch() {
 }
 
 function jsht() {
-    jsh "$@" -tm
+    jsh -tm $@
 }
 
 function jshc() {
@@ -79,16 +115,25 @@ function jshm(){
     #  fi
 }
 
-function jshpt() {
+function psht() {
     jsh "$@" -P -tm
 }
 
-function jshp() {
+function psh() {
     jsh "$@" -P
+}
+
+function jlc() {
+    jsh -l -c $@
 }
 
 function jl() {
     jsh -l $@
+}
+
+# jltm -u -p tmn
+function jtm() {
+    jsh -l -tm -c $@
 }
 
 # jltm -u -p tmn
@@ -107,6 +152,58 @@ function jltm() {
     fi
 }
 
+# if something like root@10.231.22.30 we want to separate the root and 10.231.22.30 portion out
+function sshIPPortion() {
+    if [[ $# -gt 0 ]]; then
+        # search for @ in value
+        if [[ "$1" == *"@"* ]]; then
+            ipPortion=$(echo "$1" | sed -r 's/(.*)@(.*)$/\2/')
+            echo "$ipPortion"
+            return
+        fi
+    fi
+    echo "$@"
+
+}
+
+function sshUserPortion() {
+    if [[ $# -gt 0 ]]; then
+        # search for @ in value
+        if [[ "$1" == *"@"* ]]; then
+            userPortion=$(echo "$1" | sed -r 's/(.*)@(.*)$/\1/')
+            echo "$userPortion"
+            return
+        fi
+    fi
+    echo "$@"
+
+}
+
+
+function isAWS() {
+    # set it to centos if it's currently aws server
+    case $1 in
+        10.80.* ) # dev aws
+            echo -n "centos"
+            ;;
+        10.131.1.* ) # prod aws
+            echo -n "centos"
+            ;;
+        10.131.2.* ) # prod aws
+            echo -n "centos"
+            ;;
+        10.131.4.* ) # prod aws
+            echo -n "centos"
+            ;;
+        10.132.* ) # prod aws
+            echo -n "centos"
+            ;;
+        * )
+        ;;
+    esac
+
+}
+
 function jsh() {
     resetroyalsettings
     sFileTarget="$royal_file_target"
@@ -118,14 +215,25 @@ function jsh() {
     sLast='false'
 
     if [[ $# -eq 0 ]] ; then
-        cat $sListFile
         echo 'No arguments'
         return 0
     fi
 
     # we don't want the search string.
     # variable will be useful only for tmux
-    sSearch=$1
+    sSearch=$(sshIPPortion $1)
+
+    if [[ "$1" == *"@"* ]]; then
+        userPortion=$(sshUserPortion $1)
+        #echo "${userPortion}@"
+        # remove user from ssh
+        sLastCommand=$(echo "$sLastCommand" | sed -r "s/${userPortion}@//g")
+        echo "$sLastCommand"
+    fi
+    #sSearch=$1
+    #echo $sLastCommand
+    #echo "$sSearch"
+    #return
     if [[ "$sSearch" == '-l' ]]; then
         # save all arguements to list z
         # empty out all arguements
@@ -136,7 +244,7 @@ function jsh() {
            currentArg="$currentArg $1"
            shift
         done
-        echo "current args $currentArg"
+        paramList="$currentArg"
         # reload args with the .jupmlist
         cIndex="1"
         for n in $(cat $sLastFile)
@@ -144,14 +252,14 @@ function jsh() {
             eval "$cIndex=\"$n\""
             cIndex=$(expr $cIndex + 1)
         done
-        echo "old $@"
+        paramList="[$@] $paramList"
         # add in new arg
         for n in $(echo $currentArg)
         do
             eval "$cIndex=\"$n\""
             cIndex=$(expr $cIndex + 1)
         done
-        echo "combined $@"
+        echo "$paramList"
         # add back in the z arguements
         # reset sSearch value
         sLast='true'
@@ -176,10 +284,13 @@ function jsh() {
         return
     fi
 
+    default_ping=10
     sConnect='false'
     sCopyOutputCommand='false'
     sDoc=0
     sExecuteCommand=""
+    sInTM='false'
+    sIndex="0"
     sList='false'
     sManual='false'
     sMysqlCommand='false'
@@ -193,13 +304,15 @@ function jsh() {
     sRefreshKnownKey='false'
     sService='web'
     sServiceEnabled=0
+    sConfluentEnabled=0
+    sConfluentCommand=''
     sServicePathPost='bin/service.sh'
     sServicePathPre='/et/services'
     sServiceType='status'
     sTmux=''
-    sInTM='false'
     sTmuxName=''
     sUser=''
+    sUserManuallySet='false'
 
     if [[ "'$*'" = *-d* ]] ;
     then
@@ -209,7 +322,7 @@ function jsh() {
 
     lastArg1=""
     lastArg2=""
-    while [[ $# -gt 0 ]]
+    while [[ $# -gt 0 ]];
     do
         key="$1"
         #echo "key $1"
@@ -239,6 +352,16 @@ function jsh() {
 
                 # remove from list
                 sLastCommand="${sLastCommand/\-c/}"
+                shift
+                ;;
+            '-n' )
+                sIndex="$2"
+                shift
+                shift
+                ;;
+            '-ping' )
+                default_ping=$2
+                shift
                 shift
                 ;;
             '-inTM' )
@@ -272,6 +395,20 @@ function jsh() {
                 lastArg2="$lastArg2 $1"
                 shift
                 ;;
+            '-cc' ) # confluent cluster services
+                sConnect='true'
+                serviceType="$2"
+                actionType="$3"
+                sConfluentEnabled=1
+                sConfluentCommand=$(flServe $serviceType $actionType)
+                echo -n "$sConfluentCommand" | pbcopy
+                shift
+                shift
+                shift
+                lastArg1=" -c"
+                lastArg2=""
+                sLastCommand="${sLastCommand/\-cc/}"
+                ;;
             '-tm' )
                 sTmux='true'
 
@@ -280,6 +417,55 @@ function jsh() {
                 lastArg2=""
 
                 sLastCommand="${sLastCommand/\-tm/}"
+                shift
+                ;;
+            # this doesn't work properly
+            '-tmu' )
+                sTmux='true'
+                sConnect='true'
+                sUser="$2"
+
+                # add to the last arguement -c because we want to connect
+                lastArg1=" -c"
+                lastArg2=" -u $sUser"
+
+                # if this hasn't been set already
+                if [[ "" == "$sUser" ]]; then
+                    sUser="etadm"
+                fi
+                # if this hasn't been set already
+                if [[ "" == "$sPassword" ]]; then
+                    sPassword="p"
+                fi
+
+                # remove from list
+                sLastCommand="${sLastCommand/\-tmu/}"
+
+                shift
+                shift
+                ;;
+
+            # this doesn't work properly
+            '-tmc' )
+                sTmux='true'
+                sConnect='true'
+
+                # add to the last arguement -c because we want to connect
+                lastArg1=" -c"
+                lastArg2=""
+
+                # if this hasn't been set already
+                if [[ "" == "$sUser" ]]; then
+                    sUser="etadm"
+                fi
+                # if this hasn't been set already
+                if [[ "" == "$sPassword" ]]; then
+                    sPassword="p"
+                fi
+
+                # remove from list
+                sLastCommand="${sLastCommand/\-tmc/}"
+
                 shift
                 ;;
             '-tmn' )
@@ -347,7 +533,7 @@ function jsh() {
                     'zkstat' )
                         export copy_path="/et/software/zkp/bin/zkServer.sh status"
                         ;;
-                    'zkcli' )
+                    'zkc' )
                         export copy_path="/et/software/zkp/bin/zkCli.sh"
                         ;;
                     * )
@@ -364,9 +550,17 @@ function jsh() {
                 sDoc=1
                 shift
                 ;;
+            '-ur' ) # user
+                sUser="root"
+                sConnect='true'
+                sUserManuallySet='true'
+                sPassword="e"
+                shift
+                ;;
             '-u' ) # user
                 sUser="$2"
                 sConnect='true'
+                sUserManuallySet='true'
                 nextIsASwitch $2
                 nextIsEmpty $2
                 debugme "last command results is $royal_last_is_switch"
@@ -404,6 +598,7 @@ function jsh() {
                 ;;
             '-t' ) # ping it
                 sPing='true'
+                sLastCommand="${sLastCommand/\-t/}"
                 shift
                 ;;
             '-m' ) # manually connect with the string
@@ -503,7 +698,12 @@ function jsh() {
             if [[ "$sNotInclude" != "" ]]; then
                 debugme "not include is $sNotInclude"
                 echo "not include"
-                sCurrentURI=$(grep -i "$sSearch" $sFileTarget | grep -o "${royal_delimiter_1}.*" | grep -iv $sNotInclude | awk -F${royal_delimiter_1} '{ print $2 }' | head -n 1)
+                sCurrentURI=$(grep -i "$sSearch" $sFileTarget | grep -o "${royal_delimiter_1}.*" | grep -iv $sNotInclude | awk -F${royal_delimiter_1} '{ print $2 }')
+                if [[ $sIndex != "0" ]];
+                then
+                    sCurrentURI=$(echo $sCurrentURI ep -o "${royal_delimiter_1}.*" | grep -iv $sNotInclude | awk -F${royal_delimiter_1} '{ print $2 }' | head -n $sIndex | tail -n 1)
+                fi
+
                 if [[ "$sTmux" == "true" ]]; then
                     sCurrentURI=$(grep -i "$sSearch" $sFileTarget | grep -o "${royal_delimiter_1}.*" | grep -iv $sNotInclude |  awk -F${royal_delimiter_1} '{ print $2 }' )
                 fi
@@ -512,7 +712,8 @@ function jsh() {
 
         # start ping
         if [[ "$sPing" = 'true' ]]; then
-            debugme "ping this $sCurrentURI"
+            debugme "ping this $sCurrentURI $default_ping"
+            #fping -c $default_ping $sCurrentURI
             ping $sCurrentURI
         elif [[ "$sConnect" = 'true' ]]; then
             #echo "counter $counter |$sCurrentURI|"
@@ -522,7 +723,7 @@ function jsh() {
             # basically using jsh to create tmux sessions that will in affect call jsh
             if [[ "$sTmux" == "true" ]]; then
                 #echo "testing blah"
-                tmuxCommand=""
+                #tmuxCommand=""
                 # takes care of session names
                 paneName=`date +"%y%m%d_%H%M%S"`
                 if [[ "$sTmuxName" != "" ]]; then
@@ -532,7 +733,7 @@ function jsh() {
 
                 #echo "blah |$sCurrentURI|"
                 # iterate through listing
-                for currentIP in $(sed 's/:/\n/g' <<< $sCurrentURI)
+                for currentIP in $(echo $sCurrentURI | sed 's/:/\n/g')
                 do
                     if [[ "$firstPane" == "t" ]]; then
                         tmux new-session -d -s $paneName
@@ -549,8 +750,9 @@ function jsh() {
                     # generate the output properly
                     #echo "| jsh $tmCurrentURI $sAllArgs |"
 
+                    jshCommand="jsh"
                     # send command to the output properly
-                    tmux send-keys -t "$paneName" "jsh $tmCurrentURI $sAllArgs -inTM" Enter
+                    tmux send-keys -t "$paneName" "$jshCommand $tmCurrentURI $sAllArgs -inTM" Enter
 
                     # have to readjust pane space after you add a new pane
                     # (the panes are divided in half between on the current pane so
@@ -560,7 +762,7 @@ function jsh() {
                     tmux select-layout -t "$paneName" even-horizontal
 
                     #echo "\"jsh $tmCurrentURI $currentIP\" "
-                    tmuxCommand="$tmuxCommand \"jsh $tmCurrentURI $currentIP\" "
+                    #tmuxCommand="$tmuxCommand \"jsh $tmCurrentURI $currentIP\" "
                 done
 
                 # firstPane to false means there was at least 1 tmux session.
@@ -570,7 +772,9 @@ function jsh() {
                     # to the left most pane
                     tmux select-pane -t "$paneName" -R
 
-                    tmux select-layout -t "$paneName" tiled
+                    #tmux select-layout -t "$paneName" tiled
+                    #tmux select-layout -t "$paneName" even-horizontal
+                    tmux select-layout -t "$paneName" even-vertical
                     tmux set-window-option -t "$paneName" synchronize-panes on
                     tmux attach -t "$paneName"
                 fi
@@ -581,8 +785,18 @@ function jsh() {
                 # connect regularly
                 debugme "connect string $sSearch"
                 debugme "string should be $sCurrentURI";
+                #echo "found user $sUser"
                 if [[ "$sUser" != "" ]]; then
                     sUser="$sUser@"
+                fi
+
+                if [[ "$sUserManuallySet" != "true" ]]; then
+                    # find user based on ip
+                    foundUser=$(isAWS $sCurrentURI)
+                    #echo "found user being $foundUser $sCurrentURI"
+                    if [[ "$foundUser" != "" ]]; then
+                        sUser="$foundUser@"
+                    fi
                 fi
                 if [[ "$sRefreshKnownKey" = 'true' ]]; then
                     #ssh-keygen -R $sUser$sCurrentURI
@@ -598,6 +812,10 @@ function jsh() {
                         then
                             echo "assh service"
                             assh $sUser$sCurrentURI $sPassword "$sServicePathPre/$sService/$sServicePathPost $sServiceType"
+                        elif [[ $sConfluentEnabled -eq "1" ]];
+                        then
+                            echo "confluent"
+                            assh $sUser$sCurrentURI $sPassword "$sConfluentCommand"
                         # execute with query
                         elif [[ "$sList" = "true" ]];
                         then
@@ -624,6 +842,10 @@ function jsh() {
                         then
                             echo "ssh services"
                             ssh $sUser$sCurrentURI "$sServicePathPre/$sService/$sServicePathPost $sServiceType"
+                        elif [[ $sConfluentEnabled -eq "1" ]];
+                        then
+                            echo "Confluent"
+                            ssh $sUser$sCurrentURI "$sConfluentCommand"
                         elif [[ "$sDoc" -eq "1" ]]
                         then
                             echo "ssh stats"
@@ -659,7 +881,11 @@ function jsh() {
                   #echo "blah3"
                   grep -i "$sSearch" $sFileTarget
                 fi
-
+            fi
+            if [[ $sIndex != "0" ]];
+            then
+                currentOutput=$(grep -i "$sSearch" $sFileTarget | head -n $sIndex | tail -n 1)
+                echo "\nindex => $currentOutput"
             fi
         fi
     else
