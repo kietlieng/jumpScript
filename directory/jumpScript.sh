@@ -208,7 +208,12 @@ function jfetch() {
 
 # jump to last location
 function jj() {
-    cd `cat ~/.jumplast`
+
+    if [[ $# -gt 0 ]]; then
+      cd $(cat ~/.jumplast.${1})
+    else
+      cd $(cat ~/.jumplast)
+    fi
 }
 
 # mark working location
@@ -216,7 +221,7 @@ function jw() {
     lastLocal=$(pwd)
     if [[ $# -gt 0 ]]; then
         # clear it
-        echo "$lastLocal" > ~/.jumplast${1}
+        echo "$lastLocal" > ~/.jumplast.${1}
     else
         echo "$lastLocal" > ~/.jumplast
     fi
