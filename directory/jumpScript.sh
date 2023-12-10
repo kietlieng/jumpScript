@@ -217,6 +217,9 @@ function jj() {
 }
 
 # mark working location
+alias jwl="ls -1 ~/.jumplast*"
+
+# mark working location
 function jw() {
     lastLocal=$(pwd)
     if [[ $# -gt 0 ]]; then
