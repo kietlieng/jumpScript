@@ -36,7 +36,7 @@ function assh() {
     S_HOST=$1
     shift
     shift
-    sshpass -e ssh -o StrictHostKeyChecking=no $S_HOST "$@"
+    sssh $S_HOST "$@"
 }
 
 function nextIsEmpty() {
