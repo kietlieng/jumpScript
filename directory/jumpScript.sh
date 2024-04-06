@@ -28,8 +28,7 @@ function j() {
     export JUMP_FZF='false'
     start=`date +%s`
     # check to see if directory exists
-    if [ "$1" ]
-    then
+    if [[ "$1" ]]; then
         if [ "$1" = "list" ]
         then
             jlist
@@ -51,7 +50,7 @@ function j() {
             #return
 
             #cd $(ls -d ~/$JUMPDIRNAME/$1* | head -n 1)
-            JUMPPATH="$(ls -d ~/$JUMPDIRNAME/$1* 2> /dev/null | head -n 1)"
+            JUMPPATH="$(ls -l ~/$JUMPDIRNAME/$1* 2> /dev/null | head -n 1 | awk '{print $NF}' )"
             #if [[ "$JUMPPATH" = "./" ]]
             if [[ -z $JUMPPATH ]]; then
                 echo "no such path $1"
@@ -124,15 +123,50 @@ function j() {
             open .
         fi
 
-    end=`date +%s`
-else
-    jlist
-    ls -ltr;
+        end=`date +%s`
+    else
+        jlist
+        ls -ltr;
     fi
 
-end=`date +%s`
-runtime=$((end-start))
-#echo "run time $runtime"
+    end=`date +%s`
+    runtime=$((end-start))
+    #echo "run time $runtime"
+
+}
+
+# Jump script then go edit
+function jx() {
+
+  if [[ $# -lt 1 ]]; then
+    return
+  fi
+
+  jOutcome=$(j $@)
+
+  if [[ $jOutcome == *"no such path"* ]]; then
+    return
+  fi
+  echo "jOutcome $jOutcome"
+  x
+
+}
+
+# Jump script then go edit from the root
+function jX() {
+
+  if [[ $# -lt 1 ]]; then
+    return
+  fi
+
+  jOutcome=$(j $@)
+
+  if [[ $jOutcome == *"no such path"* ]]; then
+    return
+  fi
+  echo "jOutcome $jOutcome"
+  X
+
 }
 
 # list jump commands

@@ -480,7 +480,7 @@ function jsh() {
                 shift
                 shift
                 ;;
-            '-o' )
+            '-C' )
                 sCopyOutputCommand='true'
                 shift
                 ;;
@@ -665,7 +665,7 @@ function jsh() {
         # copy the output
         if [[ $sCopyOutputCommand = 'true' ]]; then
             S_COPY=$(grep -i $sSearch $sFileTarget)
-            echo "$S_COPY" | pbcopy
+            echo -n "$S_COPY" | awk -F'^' '{ print $NF }' | tr -d '\n' | pbcopy
         fi
 
         # if true don't interpret anything just run the command
