@@ -186,6 +186,7 @@ function jlist() {
 }
 
 function jf() {
+#    echo "jlist | grep -i \"^$1.*$JUMP_DELIMITER_GREP\""
     jlist | grep -i "$1"
 }
 
@@ -205,9 +206,12 @@ function jadd() {
     # if 2 args 
     if [ "$2" ]; then
         echo "$2${JUMP_DELIMITER}${currentLocation}/$1" >> ~/$JUMP_FILE
+        # sort after adding
     else
         echo "$1${JUMP_DELIMITER}${currentLocation}" >> ~/$JUMP_FILE
     fi
+    echo "sort -o ~/$JUMP_FILE ~/$JUMP_FILE"
+    sort -o ~/$JUMP_FILE ~/$JUMP_FILE
   fi
 }
 
