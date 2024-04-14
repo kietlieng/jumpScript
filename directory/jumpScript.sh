@@ -19,9 +19,12 @@
 export JUMPSCRIPTDIR=$(cd "$(dirname "${(%):-%N}")" && pwd)
 
 # jump drive directory name file
-export JUMPDIRNAME=".jumpDir"
+export JUMP_DIRNAME=".jumpDir"
+export JUMP_FILE=".jumpscript"
 export JUMP_FZF="false"
 export JUMP_LAST=""
+export JUMP_DELIMITER="^"
+export JUMP_DELIMITER_GREP="\^"
 
 # main jump command if no arguements are present list the jump commands
 function j() {
@@ -39,18 +42,18 @@ function j() {
         else
             jumpDirectoryExists
             # quit if directory doesn not exists
-            if [ ! -d ~/$JUMPDIRNAME ]
+            if [ ! -f ~/$JUMP_FILE ]
             then
                 echo "doesn't exists"
                 return
             fi
 
-            #DIRRESULT=$(ls -d $JUMPSCRIPTDIR/$JUMPDIRNAME/$1* 2> /dev/null | head -n 1)
+            #DIRRESULT=$(ls -d $JUMPSCRIPTDIR/$JUMP_FILE/$1* 2> /dev/null | head -n 1)
             #echo $DIRRESULT
             #return
 
-            #cd $(ls -d ~/$JUMPDIRNAME/$1* | head -n 1)
-            JUMPPATH="$(ls -l ~/$JUMPDIRNAME/$1* 2> /dev/null | head -n 1 | awk '{print $NF}' )"
+            #cd $(ls -d ~/$JUMP_FILE/$1* | head -n 1)
+            JUMPPATH="$(grep -i "^$1.*\^" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
             #if [[ "$JUMPPATH" = "./" ]]
             if [[ -z $JUMPPATH ]]; then
                 echo "no such path $1"
@@ -172,14 +175,14 @@ function jX() {
 # list jump commands
 function jlist() {
     jumpDirectoryExists
-    echo "~/$JUMPDIRNAME"
-    if [ ! -d ~/$JUMPDIRNAME ]
-    then
-        return
+    echo "~/$JUMP_FILE"
+    if [ ! -f ~/$JUMP_FILE ]; then
+      echo "quitting"
+      return
     fi
     # we only want to print out symbol links.  We should be able to store things like files is here also, although I do not know why
     # only print the last 3 columns
-    ls -l ~/$JUMPDIRNAME | awk '{print $(NF-2) " " $(NF-1) " " $NF}'
+    cat ~/$JUMP_FILE | awk -F'^' '{print $(NF-1) " " $NF}'
 }
 
 function jf() {
@@ -188,54 +191,56 @@ function jf() {
 
 # add symbol link to jump script
 function jadd() {
-    jumpDirectoryExists
-    if [ ! -d ~/$JUMPDIRNAME ]
-    then
-        echo "jump directory doesn't exists"
-        return
+  jumpDirectoryExists
+  if [ ! -f ~/$JUMP_FILE ]
+  then
+      echo "jump directory doesn't exists"
+      return
+  fi
+  currentLocation=`pwd`
+
+  # if have 1 arg
+  if [ "$1" ]
+  then
+    # if 2 args 
+    if [ "$2" ]; then
+        echo "$2${JUMP_DELIMITER}${currentLocation}/$1" >> ~/$JUMP_FILE
+    else
+        echo "$1${JUMP_DELIMITER}${currentLocation}" >> ~/$JUMP_FILE
     fi
-    currentLocation=`pwd`
-    if [ "$1" ]
-    then
-        if [ "$2" ]
-        then
-            /bin/ln -s $currentLocation/$1 ~/$JUMPDIRNAME/$2
-        else
-            /bin/ln -s "$currentLocation" ~/$JUMPDIRNAME/$1
-        fi
-    fi
+  fi
 }
 
 # remove symbol link
 function jremove() {
-    if [ -L ~/$JUMPDIRNAME/$1 ]
-    then
-        rm ~/$JUMPDIRNAME/$1
+#    echo "grep -q \"^$1$JUMP_DELIMITER_GREP\" ~/$JUMP_FILE"
+    if grep -iq "^$1$JUMP_DELIMITER_GREP" ~/$JUMP_FILE; then
+      sed -i '' "/^$1$JUMP_DELIMITER_GREP/d" ~/$JUMP_FILE
     else
-        echo "This symlink doesn't exists in location ~/$JUMPDIRNAME"
+        echo "Entry does not exists in ~/$JUMP_FILE"
     fi
 }
 
 # prompt user if symbol link exists
 function jumpDirectoryExists() {
-    if [ ! -d ~/$JUMPDIRNAME ]
+    if [ ! -f ~/$JUMP_FILE ]
     then
         echo $JUMPSCRIPTDIR
-        echo "I see the directory doesn't exist would you like to create $JUMPDIRNAME in location $JUMPSCRIPTDIR ? [y/n]: "
+        echo "I see the file doesn't exist would you like to create $JUMP_FILE in location ~/.jumpscript? [y/n]: "
         read response
         if [ $response = "y" ]
         then
-            mkdir ~/$JUMPDIRNAME
+            touch ~/$JUMP_FILE
         else
             return 1
         fi
     fi
 }
 
-# fetch
+# fetch ... don't know what I want to do with this 
 function jfetch() {
     CURRENTDIR=$(PWD)
-    cd ~/$JUMPDIRNAME/$1*
+    cd ~/$JUMP_FILE/$1*
     cp $2 $CURRENTDIR
     cd $CURRENTDIR
 }
