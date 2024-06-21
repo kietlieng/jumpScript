@@ -52,11 +52,17 @@ function j() {
             #echo $DIRRESULT
             #return
 
+            unset JUMPPATH
             #cd $(ls -d ~/$JUMP_FILE/$1* | head -n 1)
-            JUMPPATH="$(grep -i "^$1.*\^" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
+            #echo "grep -i \"^$1$JUMP_DELIMITER_GREP\" ~/$JUMP_FILE"
+            export JUMPPATH="$(grep -i "^$1$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
+            if [[ -z $JUMPPATH ]]; then
+#                echo "no such path $1"
+                export JUMPPATH="$(grep -i "^$1.*$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
+            fi
             #if [[ "$JUMPPATH" = "./" ]]
             if [[ -z $JUMPPATH ]]; then
-                echo "no such path $1"
+#                echo "no such path $1"
                 return
             else
                 echo "jumping to path $JUMPPATH"
@@ -108,7 +114,7 @@ function j() {
                 cd $JUMP_OBJECT
             elif [[ -f "${JUMPPATH}/${JUMP_OBJECT}" ]]; then
                 #echo "object is file $JUMPPATH/$JUMP_OBJECT"
-                nvim$JUMP_OBJECT
+                nvim $JUMP_OBJECT
             else
                 echo "full path is $JUMPPATH/$JUMP_OBJECT is nether file or directory"
             fi
