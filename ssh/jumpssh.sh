@@ -85,6 +85,7 @@ function flServe() {
 
 function nextIsASwitch() {
     royal_last_is_switch=1
+    pecho "switch statement |$1|"
     if [[ $1 = -* ]] ;
     then
         debugme "is switch"
@@ -206,6 +207,7 @@ function isAWS() {
 
 function jsh() {
     resetroyalsettings
+
     sFileTarget="$royal_file_target"
     sPassTarget="$royal_file_pass_target"
     sFileProdTarget="$royal_file_prod_target"
@@ -497,23 +499,10 @@ function jsh() {
                 sPasswordSwitch='true'
                 sConnect='true'
                 sPassword="$2"
-                nextIsASwitch $2
-                nextIsEmpty $2
                 shift
-                if [[ "$royal_last_is_switch" -eq "0" ]];
-                then
-                    sPassword="p"
-                    lastArg2=" p"
-                elif [[ "$royal_last_is_empty" -eq "0" ]];
-                then
-                    sPassword="p"
-                    lastArg2=" p"
-                else
-                    shift
-                    sLastCommand="${sLastCommand/\-p $sPassword/}"
-                fi
-                sLastCommand="${sLastCommand/\-p/}"
-
+                pecho "next is a value $sPassword"
+                shift
+                lastArg2=" $sPassword"
                 ;;
             '-j' ) # path zk
                 export copy_path=""
@@ -657,7 +646,7 @@ function jsh() {
         echo "$sLastCommand" > $sLastFile
     fi
 
-    #echo "allargs | ${sAllArgs} |"
+    pecho "allargs | ${sAllArgs} |"
     #return
     # manual seach
     if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing" = 'true' ]]; then
