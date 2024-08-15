@@ -21,126 +21,140 @@ export JUMPSCRIPTDIR=$(cd "$(dirname "${(%):-%N}")" && pwd)
 # jump drive directory name file
 export JUMP_DIRNAME=".jumpDir"
 export JUMP_FILE=".jumpscript"
-export JUMP_FZF="false"
+export JUMP_FZF=''
 export JUMP_LAST=""
 export JUMP_DELIMITER="^"
 export JUMP_DELIMITER_GREP="\^"
 
 # main jump command if no arguements are present list the jump commands
 function j() {
-    export JUMP_FZF='false'
-    start=`date +%s`
-    # check to see if directory exists
-    if [[ "$1" ]]; then
-        if [ "$1" = "list" ]
-        then
-            jlist
-        elif [ "$1" = "help" ]
-        then
-            cat "$JUMPSCRIPTDIR/jumpScriptHelp.txt"
-            echo "\n"
-        else
-            jumpDirectoryExists
-            # quit if directory doesn not exists
-            if [ ! -f ~/$JUMP_FILE ]
-            then
-                echo "doesn't exists"
-                return
-            fi
 
-            #DIRRESULT=$(ls -d $JUMPSCRIPTDIR/$JUMP_FILE/$1* 2> /dev/null | head -n 1)
-            #echo $DIRRESULT
-            #return
+  export JUMP_FZF=''
+#    local start=`date +%s`
+  local modeOpen=''
 
-            unset JUMPPATH
-            #cd $(ls -d ~/$JUMP_FILE/$1* | head -n 1)
-            #echo "grep -i \"^$1$JUMP_DELIMITER_GREP\" ~/$JUMP_FILE"
-            export JUMPPATH="$(grep -i "^$1$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
-            if [[ -z $JUMPPATH ]]; then
-#                echo "no such path $1"
-                export JUMPPATH="$(grep -i "^$1.*$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
-            fi
-            #if [[ "$JUMPPATH" = "./" ]]
-            if [[ -z $JUMPPATH ]]; then
-#                echo "no such path $1"
-                return
-            else
-                echo "jumping to path $JUMPPATH"
-                cd $JUMPPATH
-            fi
+  # check to see if directory exists
+  if [[ $1 ]]; then
 
-            # cleaner pwd without the relative path softlink issue.  The trade off is two change directory commands instead of 1.
-            cd "$(pwd -P)"
-        fi
-        shift
-        # this will keep iterating through the arguements and diving into the next directory
-        # example j xx a b c
-        # this above with use symbol link xx then try to change directory into a* then b* then c*
-        openMode="f"
-        while [ "$1" ]
-        do
-            if [ "$1" = "/" ]
-            then
-                export JUMP_FZF="true"
-            elif [ "$1" = "-o" ]
-            then
-                openMode="t"
-            else
-                export JUMPPATH="$(find . -maxdepth 1 -iname "$1*" | sort | head -n 1)"
-                if [ "$JUMPPATH" = "./" ]
-                then
-                    echo "no such path $1"
-                    return
-                else
-                    find . -maxdepth 1 -iname "$1*"
-                    #echo "jump to $JUMPPATH"
-                    cd $JUMPPATH
-                fi
-            fi
-            shift
-        done
-
-        if [ "$JUMP_FZF" = "true" ]
-        then
-            export JUMP_OBJECT_RAW=$(__fsel)
-            # trim trailing white spaces
-            export JUMP_OBJECT=${JUMP_OBJECT_RAW%?}
-            #echo "jumpobject |$JUMP_OBJECT|"
-            export JUMPPATH=$(pwd)
-            #echo "full path is $JUMPPATH/$JUMP_OBJECT"
-            # check to see if it is a file
-            if [[ -d "${JUMPPATH}/${JUMP_OBJECT}" ]]; then
-                #echo "object is directory $JUMPPATH/$JUMP_OBJECT"
-                cd $JUMP_OBJECT
-            elif [[ -f "${JUMPPATH}/${JUMP_OBJECT}" ]]; then
-                #echo "object is file $JUMPPATH/$JUMP_OBJECT"
-                nvim $JUMP_OBJECT
-            else
-                echo "full path is $JUMPPATH/$JUMP_OBJECT is nether file or directory"
-            fi
-        fi
-        pwd;
-        if [ "$1" != "list" ]
-        then
-            ls -ltr;
-            #ls
-        fi
-
-
-        if [ "$openMode" = "t" ]
-        then
-            open .
-        fi
-
-        end=`date +%s`
+    if [ "$1" = "list" ]
+    then
+      jlist
+    elif [ "$1" = "help" ]
+    then
+      cat "$JUMPSCRIPTDIR/jumpScriptHelp.txt"
+      echo "\n"
     else
-        jlist
-        ls -ltr;
+
+      jumpDirectoryExists
+      # quit if directory doesn not exists
+      if [ ! -f ~/$JUMP_FILE ]
+      then
+          echo "doesn't exists"
+          return
+      fi
+
+      #DIRRESULT=$(ls -d $JUMPSCRIPTDIR/$JUMP_FILE/$1* 2> /dev/null | head -n 1)
+      #echo $DIRRESULT
+      #return
+
+      unset JUMPPATH
+      #cd $(ls -d ~/$JUMP_FILE/$1* | head -n 1)
+      #echo "grep -i \"^$1$JUMP_DELIMITER_GREP\" ~/$JUMP_FILE"
+      export JUMPPATH="$(grep -i "^$1$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
+
+      if [[ -z $JUMPPATH ]]; then
+#                echo "no such path $1"
+        export JUMPPATH="$(grep -i "^$1.*$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
+      fi
+      #if [[ "$JUMPPATH" = "./" ]]
+      if [[ -z $JUMPPATH ]]; then
+#                echo "no such path $1"
+        return
+      else
+        echo "jumping to path $JUMPPATH"
+        cd $JUMPPATH
+      fi
+
+      # cleaner pwd without the relative path softlink issue.  The trade off is two change directory commands instead of 1.
+      cd "$(pwd -P)"
+    fi
+
+    shift
+
+    # this will keep iterating through the arguements and diving into the next directory
+    # example j xx a b c
+    # this above with use symbol link xx then try to change directory into a* then b* then c*
+    modeOpen=''
+
+    while [[ $# -gt 0 ]]; do
+        
+      key="$1"
+      shift
+
+      if [[ "$key" == "\/" ]]; then
+        echo "forward slash"
+        export JUMP_FZF='true'
+      elif [[ "$key" = "-o" ]]; then
+        modeOpen="t"
+      else
+
+        export JUMPPATH="$(find . -maxdepth 1 -iname "$key*" | sort | head -n 1)"
+
+        if [[ "$JUMPPATH" = "./" ]]; then
+          echo "no such path $key"
+          return
+        else
+          find . -maxdepth 1 -iname "$key*"
+          #echo "jump to $JUMPPATH"
+          cd $JUMPPATH
+        fi
+      fi
+
+    done
+
+    if [[ $JUMP_FZF ]]; then
+
+      export JUMP_OBJECT_RAW=$(__fsel)
+      # trim trailing white spaces
+      export JUMP_OBJECT=${JUMP_OBJECT_RAW%?}
+      #echo "jumpobject |$JUMP_OBJECT|"
+      export JUMPPATH=$(pwd)
+      #echo "full path is $JUMPPATH/$JUMP_OBJECT"
+
+      # check to see if it is a file
+      if [[ -d "${JUMPPATH}/${JUMP_OBJECT}" ]]; then
+        #echo "object is directory $JUMPPATH/$JUMP_OBJECT"
+        cd $JUMP_OBJECT
+      elif [[ -f "${JUMPPATH}/${JUMP_OBJECT}" ]]; then
+        #echo "object is file $JUMPPATH/$JUMP_OBJECT"
+        nvim $JUMP_OBJECT
+      else
+        echo "full path is $JUMPPATH/$JUMP_OBJECT is nether file or directory"
+      fi
+
+    fi
+
+    pwd;
+
+    if [[ "$1" != "list" ]]; then
+      ls -ltr;
+      #ls
+    fi
+
+
+    if [[ $modeOpen ]]; then
+      open .
     fi
 
     end=`date +%s`
-    runtime=$((end-start))
-    #echo "run time $runtime"
+  else
+    jlist
+    ls -ltr;
+  fi
+
+#    local end=`date +%s`
+#    local runtime=$((end-start))
+#    echo "run time $runtime"
 
 }
 
