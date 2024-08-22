@@ -733,8 +733,9 @@ function jsh() {
 
                     # get the specific entry by recreating sCurrentURI keyed to IP
                     # need the end of line to cap off the ip output
-                    tmCurrentURI=$(grep -i $sSearch $sFileTarget | grep "${currentIP}\$")
-                    #echo "$tmCurrentURI | $currentIP"
+#                    tmCurrentURI=$(grep -i $sSearch $sFileTarget | grep "${currentIP}\$")
+                    tmCurrentURI=$(grep -i $sSearch $sFileTarget | grep "${currentIP}\$" | sed "s/\^/ /g" )
+                    becho "mapping $tmCurrentURI | $currentIP"
 
                     # generate the output properly
                     #echo "| jsh $tmCurrentURI $sAllArgs |"
