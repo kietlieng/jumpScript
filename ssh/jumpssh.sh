@@ -315,6 +315,7 @@ function jsh() {
     sTmuxName=''
     sUser=''
     sUserManuallySet='false'
+    modeProduction=''
 
     if [[ "'$*'" = *-d* ]] ;
     then
@@ -626,6 +627,7 @@ function jsh() {
             '-P' ) # use production list
                 sFileTarget=$sFileProdTarget
                 sPassTarget=$sFileProdPassTarget
+                modeProduction='t'
                 shift
                 ;;
             * )
@@ -714,7 +716,12 @@ function jsh() {
                 #echo "testing blah"
                 #tmuxCommand=""
                 # takes care of session names
-                paneName=`date +"%y%m%d_%H%M%S"`
+#                paneName=`date +"%y%m%d_%H%M%S"`
+                wondertitle
+                paneName="jsh-$RANDOM_TITLE1"
+                if [[ $modeProduction ]]; then
+                  paneName="psh-$RANDOM_TITLE1"
+                fi
                 if [[ "$sTmuxName" != "" ]]; then
                     paneName="$sTmuxName"
                 fi

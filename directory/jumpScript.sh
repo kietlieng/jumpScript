@@ -230,7 +230,7 @@ function jadd() {
     else
         echo "$1${JUMP_DELIMITER}${currentLocation}" >> ~/$JUMP_FILE
     fi
-    echo "sort -o ~/$JUMP_FILE ~/$JUMP_FILE"
+    pecho "sort -o ~/$JUMP_FILE ~/$JUMP_FILE"
     sort -o ~/$JUMP_FILE ~/$JUMP_FILE
   fi
 }
