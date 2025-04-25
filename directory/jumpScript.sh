@@ -75,11 +75,14 @@ function j() {
         cd $JUMPPATH
       fi
 
+      # echo "where $(pwd) $(pwd -P)"
       # cleaner pwd without the relative path softlink issue.  The trade off is two change directory commands instead of 1.
       cd "$(pwd -P)"
     fi
 
     shift
+
+    echo "blah $(PWD)"
 
     # this will keep iterating through the arguements and diving into the next directory
     # example j xx a b c
@@ -106,7 +109,11 @@ function j() {
         else
           find . -maxdepth 1 -iname "$key*"
           #echo "jump to $JUMPPATH"
-          cd $JUMPPATH
+          if [[ -n $JUMPATH ]]; then
+            cd $JUMPPATH
+          else 
+            echo "failed directory $key"
+          fi
         fi
       fi
 
@@ -165,12 +172,8 @@ function jx() {
     return
   fi
 
-  jOutcome=$(j $@)
+  j $@
 
-  if [[ $jOutcome == *"no such path"* ]]; then
-    return
-  fi
-  echo "jOutcome $jOutcome"
   x
 
 }
@@ -182,12 +185,8 @@ function jX() {
     return
   fi
 
-  jOutcome=$(j $@)
+  j $@
 
-  if [[ $jOutcome == *"no such path"* ]]; then
-    return
-  fi
-  echo "jOutcome $jOutcome"
   X
 
 }
@@ -293,17 +292,18 @@ function jw() {
     fi
 }
 
-function jc() {
-    for x in `ls -lt1`;
-    do
-        # if it's a directory
-        if [ -d "$x" ];
-        then
-            echo "directory $x"
-            cd $x
-            ls -ltr
-            date
-            break
-        fi
-    done
-}
+
+#function jc() {
+#    for x in `ls -lt1`;
+#    do
+#        # if it's a directory
+#        if [ -d "$x" ];
+#        then
+#            echo "directory $x"
+#            cd $x
+#            ls -ltr
+#            date
+#            break
+#        fi
+#    done
+#}
