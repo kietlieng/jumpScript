@@ -82,7 +82,7 @@ function j() {
 
     shift
 
-    echo "blah $(PWD)"
+    # echo "blah $(PWD)"
 
     # this will keep iterating through the arguements and diving into the next directory
     # example j xx a b c
@@ -107,9 +107,9 @@ function j() {
           echo "no such path $key"
           return
         else
-          find . -maxdepth 1 -iname "$key*"
-          #echo "jump to $JUMPPATH"
-          if [[ -n $JUMPATH ]]; then
+          # find . -maxdepth 1 -iname "$key*"
+          # echo "jump to |$JUMPPATH|"
+          if [[ $JUMPPATH ]]; then
             cd $JUMPPATH
           else 
             echo "failed directory $key"
@@ -144,7 +144,7 @@ function j() {
     pwd;
 
     if [[ "$1" != "list" ]]; then
-      ls -ltr;
+      ls -ltra;
       #ls
     fi
 
@@ -156,7 +156,7 @@ function j() {
     end=`date +%s`
   else
     jlist
-    ls -ltr;
+    ls -ltra;
   fi
 
 #    local end=`date +%s`
