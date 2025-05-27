@@ -364,7 +364,7 @@ function jsh() {
 
     # remove from list
     sLastCommand="${sLastCommand/\-c/}"
-    shift
+
     ;;
   '-n' )
     sIndex="$1"
