@@ -305,7 +305,7 @@ function jsh() {
   modeProduction=''
   optHead=0
   optTail=100
-  optDNSGet=''
+  optGetDNS=''
 
   if [[ "'$*'" = *-d* ]] ;
   then
@@ -375,8 +375,8 @@ function jsh() {
         default_ping=$1
         shift
         ;;
-      '-dns' )
-        optDNSGet='t'
+      '-fetch' )
+        optGetDNS='t'
         ;;
       '-inTM' )
         sInTM='true'
@@ -636,8 +636,12 @@ fi
 pecho "allargs | ${sAllArgs} |"
 #return
 
+
+
+
+
 # manual seach
-if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing" = 'true' ]]; then
+if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing" = 'true' || "$optGetDNS"  ]]; then
 
   # copy the output
   if [[ $sCopyOutputCommand = 'true' ]]; then
@@ -689,8 +693,20 @@ if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing
     fi
   fi
 
+
+  if [[ "$optGetDNS" ]]; then
+
+
+    echo "ssearch |$sSearch| true"
+
+    local ipAddress=$(nslookup $sSearch | grep -i "server" | head -n 1 | grep -o "[.+0-9]\+")
+    local entryOutput="$sSearch^$ipAddress"
+    echo "IPaddress is $entryOutput"
+    echo -n "$entryOutput" | pbcopy
+    return
+
   # start ping
-  if [[ "$sPing" = 'true' ]]; then
+  elif [[ "$sPing" = 'true' ]]; then
 
     debugme "ping this $sCurrentURI $default_ping"
     #fping -c $default_ping $sCurrentURI
