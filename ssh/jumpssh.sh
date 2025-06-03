@@ -702,7 +702,7 @@ if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing
 
     local ipAddress=$(nslookup $sSearch | grep -i "server" | head -n 1 | grep -o "[.+0-9]\+")
     local entryOutput="$sSearch^$ipAddress"
-    echo "IPaddress is $entryOutput"
+    echo "$entryOutput"
     echo -n "$entryOutput" | pbcopy
     return
 
