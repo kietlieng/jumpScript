@@ -319,9 +319,10 @@ function jsh() {
   do
 
     key="$1"
-    #echo "key $1"
+    echo "key $1"
     #echo "starting $sAllArgs"
 
+    # leave space intentionally 
     lastArg1=" $1"
     lastArg2=""
 
@@ -332,21 +333,24 @@ function jsh() {
       # check to see if number
       +([0-9]) ) 
 
-      if [[ $optTail -eq 100 ]]; then
-        optTail=$key
-        echo "change end to $key"
-      else
-        optHead=$key
-        optHead=$((optHead + 1))
-        echo "change start to $key"
-      fi
-
-      echo 
+        if [[ $optTail -eq 100 ]]; then
+          optTail=$key
+          echo "change end to $key"
+        else
+          optHead=$key
+          optHead=$((optHead + 1))
+          echo "change start to $key"
+        fi
 
       ;;
 
+      "-fetch" )
+        optGetDNS='t'
+        echo "fetch value is $key" 
+        ;;
       '-f' ) # fake connect
         royal_do_not_connect=1
+        echo "-f switch"
         shift
         ;;
       '-s' ) # debug skip it
@@ -374,9 +378,6 @@ function jsh() {
       '-ping' )
         default_ping=$1
         shift
-        ;;
-      '-fetch' )
-        optGetDNS='t'
         ;;
       '-inTM' )
         sInTM='true'
