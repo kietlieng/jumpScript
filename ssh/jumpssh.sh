@@ -62,42 +62,6 @@ function nextIsEmpty() {
 
 }
 
-#confluent cypher
-function flServe() {
-
-  serviceArg="$1"
-  serviceTypeArg="$2"
-  executeString=""
-
-  declare -A conArray
-  conArray[c]="confluent-kafka-connect.service"
-  conArray[k]="confluent-kafka.service"
-  conArray[r]="confluent-kafka-rest.service"
-  conArray[s]="confluent-schema-registry.service"
-  conArray[z]="confluent-zookeeper.service"
-
-  declare -A serviceArray
-  serviceArray[r]="restart"
-  serviceArray[s]="status"
-  serviceArray[st]="stop"
-
-  serviceType=$serviceArray[$serviceTypeArg]
-
-  if [[ $serviceArg = 'a' ]]; then
-    for key val in "${(@kv)conArray}"; do
-      executeString="$executeString sudo service $val $serviceType;"
-    done
-  else
-    for (( i=0; i< ${#serviceArg}; i++ )); do
-      serviceIndex="${serviceArg:$i:1}"
-      executeString="$executeString sudo service ${conArray[$serviceIndex]} $serviceType;"
-    done
-  fi
-
-  echo "$executeString"
-
-}
-
 function nextIsASwitch() {
 
   royal_last_is_switch=1
@@ -293,8 +257,6 @@ function jsh() {
   sRefreshKnownKey='false'
   sService='web'
   sServiceEnabled=0
-  sConfluentEnabled=0
-  sConfluentCommand=''
   sServicePathPost='bin/service.sh'
   sServicePathPre='/et/services'
   sServiceType='status'
@@ -307,19 +269,17 @@ function jsh() {
   optTail=100
   optGetDNS=''
 
-  if [[ "'$*'" = *-d* ]] ;
-  then
+  if [[ "'$*'" = *-d* ]]; then
     royal_debug_me=1
     echo "================ SET DEBUG"
   fi
 
   lastArg1=""
   lastArg2=""
-  while [[ $# -gt 0 ]];
-  do
+  while [[ $# -gt 0 ]]; do
 
     key="$1"
-    echo "key $1"
+    # echo "key $1"
     #echo "starting $sAllArgs"
 
     # leave space intentionally 
@@ -406,19 +366,6 @@ function jsh() {
         sServiceType="$1"
         lastArg2="$lastArg2 $1"
         shift
-        ;;
-      '-cc' ) # confluent cluster services
-        sConnect='true'
-        serviceType="$1"
-        actionType="$2"
-        sConfluentEnabled=1
-        sConfluentCommand=$(flServe $serviceType $actionType)
-        echo -n "$sConfluentCommand" | pbcopy
-        shift
-        shift
-        lastArg1=" -c"
-        lastArg2=""
-        sLastCommand="${sLastCommand/\-cc/}"
         ;;
       '-tm' )
         sTmux='true'
@@ -624,296 +571,255 @@ function jsh() {
         ;;
     esac
 
-  # collect all args after the fact
-  sAllArgs="${sAllArgs}${lastArg1}${lastArg2}"
+    # collect all args after the fact
+    sAllArgs="${sAllArgs}${lastArg1}${lastArg2}"
 
-done
+  done
 
-# if not recall command and not in tmux
-if [[ "$sLast" = 'false' && "$sInTM" = 'false' ]]; then
-  echo "$sLastCommand" > $sLastFile
-fi
-
-pecho "allargs | ${sAllArgs} |"
-#return
-
-
-
-
-
-# manual seach
-if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing" = 'true' || "$optGetDNS"  ]]; then
-
-  # copy the output
-  if [[ $sCopyOutputCommand = 'true' ]]; then
-    S_COPY=$(grep -i $sSearch $sFileTarget)
-    echo -n "$S_COPY" | awk -F'^' '{ print $NF }' | tr -d '\n' | pbcopy
+  # if not recall command and not in tmux
+  if [[ "$sLast" = 'false' && "$sInTM" = 'false' ]]; then
+    echo "$sLastCommand" > $sLastFile
   fi
 
-  # if true don't interpret anything just run the command
-  if [[ $sManual = 'true' ]]; then
-    sCurrentURI=$sSearch
-    # list jump points
-  else
-    #echo "grep -i \"$sSearch\" $sFileTarget | grep -o \"${royal_delimiter_1}.*\" | awk -F${royal_delimiter_1} '{ print $2 }' | head -n 1)"
-    sCurrentURI=$(grep -i "$sSearch" $sFileTarget | grep -o "${royal_delimiter_1}.*" | awk -F${royal_delimiter_1} '{ print $2 }' | head -n 1)
+  pecho "allargs | ${sAllArgs} |"
 
-    # if they haven't set the password find
-    #
-    # kl save for another time
-    # kl auto fill password.  But we forget about user.  maybe auto fill both?
-    #            if [[ "$sPasswordSwitch" == "false" ]]; then
-    #                # grab password
-    #                havePassword=$(grep -i "$sSearch" $sPassTarget | grep -o "${royal_delimiter_1}.*${royal_delimiter_2}.*" |  awk -F${royal_delimiter_2} '{ print $3 }' | head -n 1)
-    #                echo "grep -i \"$sSearch\" $sPassTarget | grep -o \"${royal_delimiter_1}.*${royal_delimiter_2}.*\" |  awk -F${royal_delimiter_2} '{ print \$3 }' | head -n 1"
-    #                echo "password is $havePassword"
-    #                if [[ $havePassword ]]; then
-    #                    sPassword="$havePassword"
-    #                fi
-    #            fi
+  # manual seach
+  if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing" = 'true' || "$optGetDNS"  ]]; then
 
-    if [[ "$sTmux" == "true" ]]; then
-      #echo "grep -i \"$sSearch\" $sFileTarget | grep -o \"${royal_delimiter_1}.*\" | awk -F${royal_delimiter_1} '{ print \$2 }'"
-      sCurrentURI=$(grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "${royal_delimiter_1}.*" | awk -F${royal_delimiter_1} '{ print $2 }')
-      echo "query $sCurrentURI"
+    # copy the output
+    if [[ $sCopyOutputCommand = 'true' ]]; then
+      S_COPY=$(grep -i $sSearch $sFileTarget)
+      echo -n "$S_COPY" | awk -F'^' '{ print $NF }' | tr -d '\n' | pbcopy
     fi
 
-    # not include in connection run command with inverse
-    if [[ "$sNotInclude" != "" ]]; then
-      debugme "not include is $sNotInclude"
-      echo "not include"
-      sCurrentURI=$(grep -i "$sSearch" $sFileTarget | grep -o "${royal_delimiter_1}.*" | grep -iv $sNotInclude | awk -F${royal_delimiter_1} '{ print $2 }')
-      if [[ $sIndex != "0" ]];
-      then
-        sCurrentURI=$(echo $sCurrentURI ep -o "${royal_delimiter_1}.*" | grep -iv $sNotInclude | awk -F${royal_delimiter_1} '{ print $2 }' | head -n $sIndex | tail -n 1)
-      fi
+    # if true don't interpret anything just run the command
+    if [[ $sManual = 'true' ]]; then
+      sCurrentURI=$sSearch
+      # list jump points
+    else
+      #echo "grep -i \"$sSearch\" $sFileTarget | grep -o \"${royal_delimiter_1}.*\" | awk -F${royal_delimiter_1} '{ print $2 }' | head -n 1)"
+      sCurrentURI=$(grep -i "$sSearch" $sFileTarget | grep -o "${royal_delimiter_1}.*" | awk -F${royal_delimiter_1} '{ print $2 }' | head -n 1)
 
       if [[ "$sTmux" == "true" ]]; then
-        sCurrentURI=$(grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "${royal_delimiter_1}.*" | grep -iv $sNotInclude |  awk -F${royal_delimiter_1} '{ print $2 }' )
+        #echo "grep -i \"$sSearch\" $sFileTarget | grep -o \"${royal_delimiter_1}.*\" | awk -F${royal_delimiter_1} '{ print \$2 }'"
+        sCurrentURI=$(grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "${royal_delimiter_1}.*" | awk -F${royal_delimiter_1} '{ print $2 }')
+        echo "query $sCurrentURI"
+      fi
+
+      # not include in connection run command with inverse
+      if [[ "$sNotInclude" != "" ]]; then
+        debugme "not include is $sNotInclude"
+        echo "not include"
+        sCurrentURI=$(grep -i "$sSearch" $sFileTarget | grep -o "${royal_delimiter_1}.*" | grep -iv $sNotInclude | awk -F${royal_delimiter_1} '{ print $2 }')
+        if [[ $sIndex != "0" ]]; then
+          sCurrentURI=$(echo $sCurrentURI ep -o "${royal_delimiter_1}.*" | grep -iv $sNotInclude | awk -F${royal_delimiter_1} '{ print $2 }' | head -n $sIndex | tail -n 1)
+        fi
+
+        if [[ "$sTmux" == "true" ]]; then
+          sCurrentURI=$(grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "${royal_delimiter_1}.*" | grep -iv $sNotInclude |  awk -F${royal_delimiter_1} '{ print $2 }' )
+        fi
       fi
     fi
-  fi
 
 
-  if [[ "$optGetDNS" ]]; then
-
+    if [[ "$optGetDNS" ]]; then
 
     echo "ssearch |$sSearch| true"
-
     local ipAddress=$(nslookup $sSearch | grep -i "server" | head -n 1 | grep -o "[.+0-9]\+")
     local entryOutput="$sSearch^$ipAddress"
     echo "$entryOutput"
     echo -n "$entryOutput" | pbcopy
     return
 
-  # start ping
-  elif [[ "$sPing" = 'true' ]]; then
+    # start ping
+    elif [[ "$sPing" = 'true' ]]; then
 
-    debugme "ping this $sCurrentURI $default_ping"
-    #fping -c $default_ping $sCurrentURI
-    ping $sCurrentURI
+      debugme "ping this $sCurrentURI $default_ping"
+      #fping -c $default_ping $sCurrentURI
+      ping $sCurrentURI
 
-  elif [[ "$sConnect" = 'true' ]]; then
-    #echo "counter $counter |$sCurrentURI|"
-    # split on
-    #echo "tmux value $sTmux"
-    # if tmux option is true create the panes by passing the ip of the currentIP variable to jsh.
-    # basically using jsh to create tmux sessions that will in affect call jsh
-    if [[ "$sTmux" == "true" ]]; then
-      #echo "testing blah"
-      #tmuxCommand=""
-      # takes care of session names
-      #                paneName=`date +"%y%m%d_%H%M%S"`
-      wondertitle
-      paneName="jsh-$RANDOM_TITLE1"
-      if [[ $modeProduction ]]; then
-        paneName="psh-$RANDOM_TITLE1"
-      fi
+    elif [[ "$sConnect" = 'true' ]]; then
+      #echo "counter $counter |$sCurrentURI|"
+      # split on
+      #echo "tmux value $sTmux"
+      # if tmux option is true create the panes by passing the ip of the currentIP variable to jsh.
+      # basically using jsh to create tmux sessions that will in affect call jsh
+      if [[ "$sTmux" == "true" ]]; then
+        #echo "testing blah"
+        #tmuxCommand=""
+        # takes care of session names
+        #                paneName=`date +"%y%m%d_%H%M%S"`
+        wondertitle
+        paneName="jsh-$RANDOM_TITLE1"
+        if [[ $modeProduction ]]; then
+          paneName="psh-$RANDOM_TITLE1"
+        fi
 
-      if [[ "$sTmuxName" != "" ]]; then
-        paneName="$sTmuxName"
-      fi
-      firstPane="t"
+        if [[ "$sTmuxName" != "" ]]; then
+          paneName="$sTmuxName"
+        fi
+        firstPane="t"
 
-      #echo "blah |$sCurrentURI|"
-      # iterate through listing
-      for currentIP in $(echo $sCurrentURI | sed 's/:/\n/g')
-      do
-        if [[ "$firstPane" == "t" ]]; then
-          tmux new-session -d -s $paneName
-          firstPane="f"
+        #echo "blah |$sCurrentURI|"
+        # iterate through listing
+        for currentIP in $(echo $sCurrentURI | sed 's/:/\n/g')
+        do
+          if [[ "$firstPane" == "t" ]]; then
+            tmux new-session -d -s $paneName
+            firstPane="f"
+          else
+            tmux split-window -h -t $paneName
+          fi
+
+          # get the specific entry by recreating sCurrentURI keyed to IP
+          # need the end of line to cap off the ip output
+          #                    tmCurrentURI=$(grep -i $sSearch $sFileTarget | grep "${currentIP}\$")
+          tmCurrentURI=$(grep -i $sSearch $sFileTarget | grep "${currentIP}\$" | sed "s/\^/ /g" )
+          becho "mapping $tmCurrentURI | $currentIP"
+
+          # generate the output properly
+          #echo "| jsh $tmCurrentURI $sAllArgs |"
+
+          jshCommand="jsh"
+          # send command to the output properly
+          tmux send-keys -t "$paneName" "$jshCommand $tmCurrentURI $sAllArgs -inTM" Enter
+
+          # have to readjust pane space after you add a new pane
+          # (the panes are divided in half between on the current pane so
+          # you will eventually get smaller and smaller panes for the next
+          # session.  Will run out of pane space after about 7 panes
+          # more will not be created
+          tmux select-layout -t "$paneName" even-horizontal
+
+          #echo "\"jsh $tmCurrentURI $currentIP\" "
+          #tmuxCommand="$tmuxCommand \"jsh $tmCurrentURI $currentIP\" "
+        done
+
+        # firstPane to false means there was at least 1 tmux session.
+        if [[ "$firstPane" == "f" ]]; then
+
+          # I want to select the left most pane so just go right to warp
+          # to the left most pane
+          tmux select-pane -t "$paneName" -R
+
+          #tmux select-layout -t "$paneName" tiled
+          #tmux select-layout -t "$paneName" even-horizontal
+          tmux select-layout -t "$paneName" even-vertical
+          tmux set-window-option -t "$paneName" synchronize-panes on
+          tmux attach -t "$paneName"
+
+        fi
+
+        # done don't process any other conditionals
+        return
+      else
+
+        # connect regularly
+        debugme "connect string $sSearch"
+        debugme "string should be $sCurrentURI";
+        #echo "found user $sUser"
+        if [[ "$sUser" != "" ]]; then
+          sUser="$sUser@"
+        fi
+
+        if [[ "$sUserManuallySet" != "true" ]]; then
+
+          # find user based on ip
+          foundUser=$(isAWS $sCurrentURI)
+          #echo "found user being $foundUser $sCurrentURI"
+
+          if [[ "$foundUser" != "" ]]; then
+            sUser="$foundUser@"
+          fi
+
+        fi
+
+        if [[ "$sRefreshKnownKey" = 'true' ]]; then
+
+          #ssh-keygen -R $sUser$sCurrentURI
+          echo "refresh key $sCurrentURI"
+          ssh-keygen -R $sCurrentURI
+
+        fi
+
+        if [[ "$sPassword" ]]; then
+
+          # echo "login: $sUser$sCurrentURI $sPassword" #'$sExecuteCommand'"
+          if [[ $royal_do_not_connect -eq "0" ]]; then
+            # restart service
+            if [[ $sServiceEnabled -eq "1" ]]; then
+              # echo "assh service"
+              assh $sUser$sCurrentURI $sPassword "$sServicePathPre/$sService/$sServicePathPost $sServiceType"
+            elif [[ "$sList" = "true" ]]; then
+              # echo "assh list services"
+              assh $sUser$sCurrentURI $sPassword "ls $sServicePathPre"
+            elif [[ "$sDoc" -eq "1" ]]; then
+              # echo "assh docker"
+              assh $sUser$sCurrentURI $sPassword "docker ps"
+            elif [[ "$sExecuteCommand" != "" ]]; then
+              # echo "assh execute"
+              assh $sUser$sCurrentURI $sPassword "$sExecuteCommand"
+            else
+              # echo "assh "
+              assh $sUser$sCurrentURI $sPassword #'$sExecuteCommand'
+            fi
+          fi
+
         else
-          tmux split-window -h -t $paneName
-        fi
 
-        # get the specific entry by recreating sCurrentURI keyed to IP
-        # need the end of line to cap off the ip output
-        #                    tmCurrentURI=$(grep -i $sSearch $sFileTarget | grep "${currentIP}\$")
-        tmCurrentURI=$(grep -i $sSearch $sFileTarget | grep "${currentIP}\$" | sed "s/\^/ /g" )
-        becho "mapping $tmCurrentURI | $currentIP"
+          echo "ssh $sUser$sCurrentURI"
+          if [[ $royal_do_not_connect -eq "0" ]]; then
 
-        # generate the output properly
-        #echo "| jsh $tmCurrentURI $sAllArgs |"
+            if [[ $sServiceEnabled -eq "1" ]]; then
+              echo "ssh services"
+              ssh $sUser$sCurrentURI "$sServicePathPre/$sService/$sServicePathPost $sServiceType"
+            elif [[ "$sDoc" -eq "1" ]]; then
+              echo "ssh stats"
+              ssh $sUser$sCurrentURI "docker ps"
+            elif [[ "$sExecuteCommand" != "" ]]; then
+              echo "ssh execute"
+              ssh $sUser$sCurrentURI "$sExecuteCommand"
+            else
+              echo "ssh"
+              ssh $sUser$sCurrentURI #'$sExecuteCommand'
+            fi
 
-        jshCommand="jsh"
-        # send command to the output properly
-        tmux send-keys -t "$paneName" "$jshCommand $tmCurrentURI $sAllArgs -inTM" Enter
-
-        # have to readjust pane space after you add a new pane
-        # (the panes are divided in half between on the current pane so
-        # you will eventually get smaller and smaller panes for the next
-        # session.  Will run out of pane space after about 7 panes
-        # more will not be created
-        tmux select-layout -t "$paneName" even-horizontal
-
-        #echo "\"jsh $tmCurrentURI $currentIP\" "
-        #tmuxCommand="$tmuxCommand \"jsh $tmCurrentURI $currentIP\" "
-      done
-
-      # firstPane to false means there was at least 1 tmux session.
-      if [[ "$firstPane" == "f" ]]; then
-
-        # I want to select the left most pane so just go right to warp
-        # to the left most pane
-        tmux select-pane -t "$paneName" -R
-
-        #tmux select-layout -t "$paneName" tiled
-        #tmux select-layout -t "$paneName" even-horizontal
-        tmux select-layout -t "$paneName" even-vertical
-        tmux set-window-option -t "$paneName" synchronize-panes on
-        tmux attach -t "$paneName"
-
-      fi
-
-      # done don't process any other conditionals
-      return
-    else
-
-      # connect regularly
-      debugme "connect string $sSearch"
-      debugme "string should be $sCurrentURI";
-      #echo "found user $sUser"
-      if [[ "$sUser" != "" ]]; then
-        sUser="$sUser@"
-      fi
-
-      if [[ "$sUserManuallySet" != "true" ]]; then
-
-        # find user based on ip
-        foundUser=$(isAWS $sCurrentURI)
-        #echo "found user being $foundUser $sCurrentURI"
-
-        if [[ "$foundUser" != "" ]]; then
-          sUser="$foundUser@"
-        fi
-
-      fi
-
-      if [[ "$sRefreshKnownKey" = 'true' ]]; then
-
-        #ssh-keygen -R $sUser$sCurrentURI
-        echo "refresh key $sCurrentURI"
-        ssh-keygen -R $sCurrentURI
-
-      fi
-
-      if [[ "$sPassword" ]]; then
-
-        echo "login: $sUser$sCurrentURI $sPassword" #'$sExecuteCommand'"
-
-        if [[ $royal_do_not_connect -eq "0" ]];
-        then
-          # restart service
-          if [[ $sServiceEnabled -eq "1" ]];
-          then
-            echo "assh service"
-            assh $sUser$sCurrentURI $sPassword "$sServicePathPre/$sService/$sServicePathPost $sServiceType"
-          elif [[ $sConfluentEnabled -eq "1" ]];
-          then
-            echo "confluent"
-            assh $sUser$sCurrentURI $sPassword "$sConfluentCommand"
-            # execute with query
-          elif [[ "$sList" = "true" ]];
-          then
-            echo "assh list services"
-            assh $sUser$sCurrentURI $sPassword "ls $sServicePathPre"
-          elif [[ "$sDoc" -eq "1" ]]
-          then
-            echo "assh docker"
-            assh $sUser$sCurrentURI $sPassword "docker ps"
-          elif [[ "$sExecuteCommand" != "" ]]
-          then
-            echo "assh execute"
-            assh $sUser$sCurrentURI $sPassword "$sExecuteCommand"
-          else
-            echo "assh "
-            assh $sUser$sCurrentURI $sPassword #'$sExecuteCommand'
           fi
         fi
+      fi
 
+    elif [[ "$sMysqlCommand" = 'true' ]]; then
+
+      if [[ "$sMysqlLogin" = 'false' ]]; then
+        /usr/local/bin/mysql -h $sCurrentURI -u etadm -e "show databases;"
+      else
+        /usr/local/bin/mysql -h $sCurrentURI -u etadm $sMysqlLogin
+      fi
+
+    else
+
+      # if it has something to exclude run the exclusion
+      if [[ "$sNotInclude" != "" ]]; then
+        #echo "blah1"
+        grep -i "$sSearch" $sFileTarget | grep -iv $sNotInclude
       else
 
-        echo "ssh $sUser$sCurrentURI"
-        if [[ $royal_do_not_connect -eq "0" ]]; then
-
-          if [[ $sServiceEnabled -eq "1" ]];
-          then
-            echo "ssh services"
-            ssh $sUser$sCurrentURI "$sServicePathPre/$sService/$sServicePathPost $sServiceType"
-          elif [[ $sConfluentEnabled -eq "1" ]];
-          then
-            echo "Confluent"
-            ssh $sUser$sCurrentURI "$sConfluentCommand"
-          elif [[ "$sDoc" -eq "1" ]]
-          then
-            echo "ssh stats"
-            ssh $sUser$sCurrentURI "docker ps"
-          elif [[ "$sExecuteCommand" != "" ]]
-          then
-            echo "ssh execute"
-            ssh $sUser$sCurrentURI "$sExecuteCommand"
-          else
-            echo "ssh"
-            ssh $sUser$sCurrentURI #'$sExecuteCommand'
-          fi
-
+        if [[ "$sPrettyPrint" = 'true' ]]; then
+          #echo "blah2"
+          grep -i "$sSearch" $sFileTarget | sed 's/\^.*=/=/g'
+        else
+          #echo "blah3"
+          grep -i "$sSearch" $sFileTarget
         fi
 
       fi
 
-    fi
-
-  elif [[ "$sMysqlCommand" = 'true' ]]; then
-
-    if [[ "$sMysqlLogin" = 'false' ]]; then
-      /usr/local/bin/mysql -h $sCurrentURI -u etadm -e "show databases;"
-    else
-      /usr/local/bin/mysql -h $sCurrentURI -u etadm $sMysqlLogin
-    fi
-
-  else
-
-    # if it has something to exclude run the exclusion
-    if [[ "$sNotInclude" != "" ]]; then
-      #echo "blah1"
-      grep -i "$sSearch" $sFileTarget | grep -iv $sNotInclude
-    else
-
-      if [[ "$sPrettyPrint" = 'true' ]]; then
-        #echo "blah2"
-        grep -i "$sSearch" $sFileTarget | sed 's/\^.*=/=/g'
-      else
-        #echo "blah3"
-        grep -i "$sSearch" $sFileTarget
+      if [[ $sIndex != "0" ]]; then
+        currentOutput=$(grep -i "$sSearch" $sFileTarget | head -n $sIndex | tail -n 1)
+        echo "\nindex => $currentOutput"
       fi
     fi
 
-    if [[ $sIndex != "0" ]];
-    then
-      currentOutput=$(grep -i "$sSearch" $sFileTarget | head -n $sIndex | tail -n 1)
-      echo "\nindex => $currentOutput"
-    fi
-  fi
   else
     cat $sFileTarget
   fi
