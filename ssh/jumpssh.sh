@@ -505,8 +505,6 @@ function jsh() {
         then
           debugme "empty assign etadm"
           sUser="etadm"
-        else
-          shift
         fi
         lastArg2=" $sUser"
         case $sUser in
