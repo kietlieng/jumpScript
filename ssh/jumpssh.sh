@@ -823,3 +823,7 @@ function jsh() {
   fi
 
 }
+
+function promptjsh() {
+  echo "$@"
+}

@@ -1,0 +1,34 @@
+#compdef j
+
+function _j() {
+
+  local jvalues=''
+  local state="$1"
+  # local position=0
+
+  if [[ $# -gt 0 ]]; then
+    shift
+  fi
+
+  # _arguments '1: :->pos1' # '2: :->pos2'
+  _arguments '1: :->pos1' # '2: :->pos2'
+
+  case "$state" in
+      pos1)
+          # missing the first suggest value 
+          # if [[ -z "$jvalue" ]]; then
+          #   return
+          # else
+          _values 'jump points' $(cat ~/.jumpscript | fzf --multi --ansi | awk -F '^' '{print $1}')
+          return 0
+          # fi
+        ;;
+      # pos2)
+      #     _values 'jump points 2' $(test test2)
+	  # ;;
+
+  esac
+
+}
+
+# _j "$@"
