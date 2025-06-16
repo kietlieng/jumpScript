@@ -15,13 +15,15 @@ function _j() {
 
   case "$state" in
       pos1)
-          # missing the first suggest value 
-          # if [[ -z "$jvalue" ]]; then
-          #   return
-          # else
-          _values 'jump points' $(cat ~/.jumpscript | fzf --multi --ansi | awk -F '^' '{print $1}')
-          return 0
-          # fi
+
+          local jvalues=$(cat ~/.jumpscript | fzf --no-sort --tac --ansi | awk -F '^' '{print $1}')
+
+          if [[ "$jvalues" != '' ]]; then
+
+            _values 'jump points' $jvalues
+
+          fi
+
         ;;
       # pos2)
       #     _values 'jump points 2' $(test test2)
