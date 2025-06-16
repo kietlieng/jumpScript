@@ -614,7 +614,7 @@ function jsh() {
         sPing='true'
         sLastCommand="${sLastCommand/\-t/}"
         postfixValues="$postfixValues -t"
-        echo "Ping" >> $explainFile
+        echo "ping" >> $explainFile
         ;;
       '-m' ) # manually connect with the string
         sManual='true'
@@ -723,7 +723,7 @@ function jsh() {
 
     elif  [[ $MODE_FZF ]]; then
 
-      echo "fzf search term: $sSearch" >> $explainFile
+      # echo "fzf search term: $sSearch" >> $explainFile
       # if it has something to exclude run the exclusion
       if [[ "$sNotInclude" != "" ]]; then
         # echo "blah1"
@@ -913,7 +913,7 @@ function jsh() {
 
     else
 
-      echo "else: $sSearch" >> $explainFile
+      # echo "else: $sSearch" >> $explainFile
       # if it has something to exclude run the exclusion
       if [[ "$sNotInclude" != "" ]]; then
         #echo "blah1"
@@ -938,7 +938,7 @@ function jsh() {
 
   else
 
-    echo "cat? $sSearch" >> $explainFile
+    # echo "cat? $sSearch" >> $explainFile
     cat $sFileTarget
 
   fi
