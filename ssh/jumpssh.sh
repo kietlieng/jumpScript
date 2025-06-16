@@ -8,6 +8,7 @@ royal_list_command="echo "
 royal_delimiter_1="\^"
 royal_delimiter_2="\^"
 royal_last_command=~/lab/scripts/mappings
+MODE_FZF=''
 
 alias vijumplast="vim ~/lab/scripts/mappings/.jumplast"
 alias psht="jsh -P -tm"
@@ -157,117 +158,171 @@ esac
 
 function jsh() {
 
+
+  # echo -e "test1\ntest2\ntest3"
+  # return
+
   resetroyalsettings
 
-  sFileTarget="$royal_file_target"
-  sPassTarget="$royal_file_pass_target"
-  sFileProdTarget="$royal_file_prod_target"
-  sFileProdPassTarget="$royal_file_prod_pass_target"
-  sLastFile="$royal_last_command/.jumplast"
-  sLastCommand="$@"
-  sLast='false'
+  local sFileTarget="$royal_file_target"
+  local sFileProdTarget="$royal_file_prod_target"
+  local sFileProdPassTarget="$royal_file_prod_pass_target"
+  local sLastFile="$royal_last_command/.jumplast"
+
+  local jshquery=/tmp/jsh-query
+  local explain=''
+  local explainFile=/tmp/jsh-explain
+  echo -n "" >  $explainFile
+
+  local sLastCommand="$@"
+  local sLast='false'
+  local postfixValues=''
+
+  MODE_FZF=''
+  # echo "$@" > $jshquery
+
 
   if [[ $# -eq 0 ]] ; then
     echo 'No arguments'
     return 0
   fi
 
+  local key="$1"
+  # echo "first $key"
+
+  # for n in $(echo $newKeys); do
+  #   echo "arg $n"
+  # done
+
+  shift
+
+
+  if [[ $key == '-fzffeed' ]]; then
+
+    # ignore all output
+    while [[ $# -gt 0 ]]; do
+      shift
+    done
+
+    # leading args into param
+    cIndex="1"
+    for n in $(cat $jshquery); do
+      # echo "index $cIndex $n"
+      eval "$cIndex=\"$n\""
+      cIndex=$(expr $cIndex + 1)
+    done
+
+    echo "all args $@"
+    key="$1"
+    shift
+
+  elif [[ $key == '-fzf' ]]; then
+
+    MODE_FZF='t'
+    key="$1"
+
+    echo "$@" > $jshquery
+    [[ $# -gt 0 ]] && shift
+
+  else
+
+    echo "$@" > $jshquery
+
+  fi
+
   # we don't want the search string.
   # variable will be useful only for tmux
-  sSearch=$(sshIPPortion $1)
+  local sSearch=$(sshIPPortion $key)
 
-  if [[ "$1" == *"@"* ]]; then
-    userPortion=$(sshUserPortion $1)
+  if [[ "$key" == *"@"* ]]; then
+    userPortion=$(sshUserPortion $key)
     #echo "${userPortion}@"
     # remove user from ssh
     sLastCommand=$(echo "$sLastCommand" | sed -r "s/${userPortion}@//g")
     echo "$sLastCommand"
   fi
-  #sSearch=$1
+  #sSearch=$key
   #echo $sLastCommand
   #echo "$sSearch"
   #return
+
   if [[ "$sSearch" == '-l' ]]; then
     # save all arguements to list z
     # empty out all arguements
-    shift
     currentArg=""
-    while [[ $# -gt 0 ]]
-    do
-      currentArg="$currentArg $1"
+    while [[ $# -gt 0 ]]; do
+      currentArg="$currentArg $key"
+      key="$1"
       shift
     done
+
     paramList="$currentArg"
-    # reload args with the .jupmlist
+    # reload args with the .jumplist
     cIndex="1"
-    for n in $(cat $sLastFile)
-    do
+    for n in $(cat $sLastFile); do
       eval "$cIndex=\"$n\""
       cIndex=$(expr $cIndex + 1)
     done
     paramList="[$@] $paramList"
-    # add in new arg
+
+    # restore args
     for n in $(echo $currentArg)
     do
       eval "$cIndex=\"$n\""
       cIndex=$(expr $cIndex + 1)
     done
     echo "$paramList"
+
     # add back in the z arguements
     # reset sSearch value
     sLast='true'
-    sSearch=$1
+    sSearch=$key
 
     #echo "$sSearch"
     #    else
     #        echo "$@" > $royal_last_command/.jumplast
+
   fi
-  shift
+  # shift
+
   #sAllArgs="${@}"
   sAllArgs=""
 
-  #return
-  #    # Give listing
-  #    if [[ $sSearch = '-l' ]]; then
-  #        cat $sFileTarget
-  #        return
-  #    fi
   if [[ $sSearch = '-lp' ]]; then
     cat $sFileProdTarget
     return
   fi
 
-  default_ping=10
-  sConnect='false'
-  sCopyOutputCommand='false'
-  sDoc=0
-  sExecuteCommand=""
-  sInTM='false'
-  sIndex="0"
-  sList='false'
-  sManual='false'
-  sMysqlCommand='false'
-  sMysqlLogin='false'
-  sNotInclude=""
-  sOracleCommand='false'
-  sPassword=''
-  sPasswordSwitch='false'
-  sPing='false'
-  sPrettyPrint='false'
-  sRefreshKnownKey='false'
-  sService='web'
-  sServiceEnabled=0
-  sServicePathPost='bin/service.sh'
-  sServicePathPre='/et/services'
-  sServiceType='status'
-  sTmux=''
-  sTmuxName=''
-  sUser=''
-  sUserManuallySet='false'
-  modeProduction=''
-  optHead=0
-  optTail=100
-  optGetDNS=''
+  local defaultPing=10
+  local sConnect='false'
+  local sCopyOutputCommand='false'
+  local sDoc=0
+  local sExecuteCommand=""
+  local sInTM='false'
+  local sIndex="0"
+  local sList='false'
+  local sManual='false'
+  local sMysqlCommand=''
+  local sMysqlLogin='false'
+  local sNotInclude=""
+  local sPassword=''
+  local sPasswordSwitch='false'
+  local sPing='false'
+  local sPrettyPrint='false'
+  local sRefreshKnownKey='false'
+  local sService='web'
+  local sServiceEnabled=0
+  local sServicePathPost='bin/service.sh'
+  local sServicePathPre='/et/services'
+  local sServiceType='status'
+  local sTmux=''
+  local sTmuxName=''
+  local sUser=''
+  local sUserManuallySet='false'
+  local modeProduction=''
+  local optHead=0
+  local optTail=100
+  local optGetDNS=''
 
   if [[ "'$*'" = *-d* ]]; then
     royal_debug_me=1
@@ -291,18 +346,18 @@ function jsh() {
     case $key in
 
       # check to see if number
-      +([0-9]) ) 
-
-        if [[ $optTail -eq 100 ]]; then
-          optTail=$key
-          echo "change end to $key"
-        else
-          optHead=$key
-          optHead=$((optHead + 1))
-          echo "change start to $key"
-        fi
-
-      ;;
+      # +([0-9]) ) 
+      #
+      #   if [[ $optTail -eq 100 ]]; then
+      #     optTail=$key
+      #     echo "change end to $key"
+      #   else
+      #     optHead=$key
+      #     optHead=$((optHead + 1))
+      #     echo "change start to $key"
+      #   fi
+      #
+      # ;;
 
       "-fetch" )
         optGetDNS='t'
@@ -311,13 +366,15 @@ function jsh() {
       '-f' ) # fake connect
         royal_do_not_connect=1
         echo "-f switch"
-        shift
+        [[ $# -gt 0 ]] && shift
         ;;
       '-s' ) # debug skip it
-        shift
+        [[ $# -gt 0 ]] && shift
         ;;
       '-c' ) # too lazy to type
+
         sConnect='true'
+        echo "connect" >> $explainFile
         # if this hasn't been set already
         if [[ "" == "$sUser" ]]; then
           sUser="etadm"
@@ -329,15 +386,18 @@ function jsh() {
 
         # remove from list
         sLastCommand="${sLastCommand/\-c/}"
+        postfixValues="$postfixValues -c"
+
 
         ;;
       '-n' )
         sIndex="$1"
-        shift
+
+        [[ $# -gt 0 ]] && shift
         ;;
       '-ping' )
-        default_ping=$1
-        shift
+        defaultPing=$1
+        [[ $# -gt 0 ]] && shift
         ;;
       '-inTM' )
         sInTM='true'
@@ -361,11 +421,15 @@ function jsh() {
         sServiceEnabled=1
         sService="$1"
         lastArg2=" $1"
-        shift
+
+        [[ $# -gt 0 ]] && shift
+
         # grab service type
         sServiceType="$1"
         lastArg2="$lastArg2 $1"
-        shift
+
+        [[ $# -gt 0 ]] && shift
+
         ;;
       '-tm' )
         sTmux='true'
@@ -373,12 +437,15 @@ function jsh() {
         # blank out the statements
         lastArg1=""
         lastArg2=""
+        echo "tmux" >> $explainFile
 
         sLastCommand="${sLastCommand/\-tm/}"
+        postfixValues="$postfixValues -tm"
+
         ;;
         # this doesn't work properly
 
-        '-tmu' )
+      '-tmu' )
         sTmux='true'
         sConnect='true'
         sUser="$1"
@@ -386,6 +453,7 @@ function jsh() {
         # add to the last arguement -c because we want to connect
         lastArg1=" -c"
         lastArg2=" -u $sUser"
+        echo "tmux multi connect with user $sUser" >> $explainFile
 
         # if this hasn't been set already
         if [[ "" == "$sUser" ]]; then
@@ -396,14 +464,18 @@ function jsh() {
           sPassword="p"
         fi
 
+        [[ $# -gt 0 ]] && shift
+
         # remove from list
         sLastCommand="${sLastCommand/\-tmu/}"
+        sLastCommand="${sLastCommand/$sUser/}"
+        postfixValues="$postfixValues -tmu $sUser"
 
-        shift
+
         ;;
 
-        # this doesn't work properly
-        '-tmc' )
+      # this doesn't work properly
+      '-tmc' )
 
         sTmux='true'
         sConnect='true'
@@ -411,6 +483,7 @@ function jsh() {
         # add to the last arguement -c because we want to connect
         lastArg1=" -c"
         lastArg2=""
+        echo "tmux multi connect" >> $explainFile
 
         # if this hasn't been set already
         if [[ "" == "$sUser" ]]; then
@@ -423,6 +496,7 @@ function jsh() {
 
         # remove from list
         sLastCommand="${sLastCommand/\-tmc/}"
+        postfixValues="$postfixValues -tmc"
 
         ;;
 
@@ -435,7 +509,9 @@ function jsh() {
         lastArg2=""
 
         sLastCommand="${sLastCommand/\-tmn $sTmuxName=/}"
-        shift
+        postfixValues="$postfixValues -tmn $sTmuxName"
+
+        [[ $# -gt 0 ]] && shift
         ;;
       '-C' ) sCopyOutputCommand='true' ;;
       '-r' ) sRefreshKnownKey='true' ;;
@@ -447,7 +523,7 @@ function jsh() {
         sPassword="$1"
         pecho "next is a value $sPassword"
         lastArg2=" $sPassword"
-        shift
+        [[ $# -gt 0 ]] && shift
         ;;
       '-j' ) # path zk
         export copy_path=""
@@ -477,7 +553,8 @@ function jsh() {
         # if you have a command let's tack on the bash
         echo "$copy_path" | pbcopy
         lastArg2="$copy_path"
-        shift
+        [[ $# -gt 0 ]] && shift
+
         ;;
       '-doc' ) # docker states
         sDoc=1
@@ -495,17 +572,21 @@ function jsh() {
         nextIsASwitch $1
         nextIsEmpty $1
         debugme "last command results is $royal_last_is_switch"
-        shift
+
+        echo "user: $sUser" >> $explainFile
+
+        [[ $# -gt 0 ]] && shift
+
         # is a switch then just assign the value
         if [[ "$royal_last_is_switch" -eq "0" ]];
         then
           debugme "is a switch assign etadm"
           sUser="etadm"
-        elif [[ "$royal_last_is_empty" -eq "0" ]];
-        then
+        elif [[ "$royal_last_is_empty" -eq "0" ]]; then
           debugme "empty assign etadm"
           sUser="etadm"
         fi
+
         lastArg2=" $sUser"
         case $sUser in
           'root' )
@@ -521,13 +602,19 @@ function jsh() {
             echo "no password assumed"
             ;;
         esac
-        sLastCommand="${sLastCommand/\-u $sUser/}"
+
+        sLastCommand="${sLastCommand/\-u/}"
+        sLastCommand="${sLastCommand/$sUser/}"
+        postfixValues="$postfixValues -u $sUser"
 
         debugme "user is $sUser"
+
         ;;
       '-t' ) # ping it
         sPing='true'
         sLastCommand="${sLastCommand/\-t/}"
+        postfixValues="$postfixValues -t"
+        echo "Ping" >> $explainFile
         ;;
       '-m' ) # manually connect with the string
         sManual='true'
@@ -535,30 +622,33 @@ function jsh() {
       '-a' ) # add on to the search term
         sSearch="$sSearch.*$1"
         debugme $sSearch
-        shift
+        [[ $# -gt 0 ]] && shift
+
         ;;
       '-v' ) # does not include
         sNotInclude="$1"
         debugme "exclude $sNotInclude"
-        shift
+        [[ $# -gt 0 ]] && shift
+
         ;;
       '-exec' ) # record and quit
         sExecuteCommand="$1"
         lastArg2=" $sExecuteCommand"
-        shift
+        [[ $# -gt 0 ]] && shift
+
         ;;
       '-qq' )
         sMysqlCommand='true'
         sMysqlLogin="$1"
         lastArg2=" $1"
-        shift
+        [[ $# -gt 0 ]] && shift
+
         ;;
       '-q' )
         sMysqlCommand='true'
         ;;
       '-P' ) # use production list
         sFileTarget=$sFileProdTarget
-        sPassTarget=$sFileProdPassTarget
         modeProduction='t'
         ;;
       * )
@@ -579,7 +669,9 @@ function jsh() {
     echo "$sLastCommand" > $sLastFile
   fi
 
+
   pecho "allargs | ${sAllArgs} |"
+  echo "search term: $sSearch" >> $explainFile
 
   # manual seach
   if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing" = 'true' || "$optGetDNS"  ]]; then
@@ -620,23 +712,47 @@ function jsh() {
     fi
 
 
-    if [[ "$optGetDNS" ]]; then
+    if [[ $optGetDNS ]]; then
 
-    echo "ssearch |$sSearch| true"
-    local ipAddress=$(nslookup $sSearch | grep -i "server" | head -n 1 | grep -o "[.+0-9]\+")
-    local entryOutput="$sSearch^$ipAddress"
-    echo "$entryOutput"
-    echo -n "$entryOutput" | pbcopy
-    return
+      echo "ssearch |$sSearch| true"
+      local ipAddress=$(nslookup $sSearch | grep -i "server" | head -n 1 | grep -o "[.+0-9]\+")
+      local entryOutput="$sSearch^$ipAddress"
+      echo "$entryOutput"
+      echo -n "$entryOutput" | pbcopy
+      return
+
+    elif  [[ $MODE_FZF ]]; then
+
+      echo "fzf search term: $sSearch" >> $explainFile
+      # if it has something to exclude run the exclusion
+      if [[ "$sNotInclude" != "" ]]; then
+        # echo "blah1"
+        grep -i "$sSearch" $sFileTarget | grep -iv $sNotInclude | sed "s/\$/:$postfixValues/"
+      else
+
+        if [[ "$sPrettyPrint" = 'true' ]]; then
+          # echo "blah2"
+          grep -i "$sSearch" $sFileTarget | sed 's/\^.*=/=/g' | sed "s/\$/:$postfixValues/"
+
+        else
+          # echo "blah3 $sSearch"
+          grep -i "$sSearch" $sFileTarget | sed "s/\$/:$postfixValues/"
+
+        fi
+
+      fi
 
     # start ping
     elif [[ "$sPing" = 'true' ]]; then
 
-      debugme "ping this $sCurrentURI $default_ping"
-      #fping -c $default_ping $sCurrentURI
+      debugme "ping this $sCurrentURI $defaultPing"
+      #fping -c $defaultPing $sCurrentURI
+
       ping $sCurrentURI
 
     elif [[ "$sConnect" = 'true' ]]; then
+
+      echo "in the list "
       #echo "counter $counter |$sCurrentURI|"
       # split on
       #echo "tmux value $sTmux"
@@ -740,8 +856,9 @@ function jsh() {
 
         fi
 
-        if [[ "$sPassword" ]]; then
+        if [[ $sPassword ]]; then
 
+          echo "no pass $sSearch" >> $explainFile
           # echo "login: $sUser$sCurrentURI $sPassword" #'$sExecuteCommand'"
           if [[ $royal_do_not_connect -eq "0" ]]; then
             # restart service
@@ -765,7 +882,7 @@ function jsh() {
 
         else
 
-          echo "ssh $sUser$sCurrentURI"
+          echo "ssh $sUser$sCurrentURI" >> $explainFile
           if [[ $royal_do_not_connect -eq "0" ]]; then
 
             if [[ $sServiceEnabled -eq "1" ]]; then
@@ -786,7 +903,7 @@ function jsh() {
         fi
       fi
 
-    elif [[ "$sMysqlCommand" = 'true' ]]; then
+    elif [[ $sMysqlCommand ]]; then
 
       if [[ "$sMysqlLogin" = 'false' ]]; then
         /usr/local/bin/mysql -h $sCurrentURI -u etadm -e "show databases;"
@@ -796,6 +913,7 @@ function jsh() {
 
     else
 
+      echo "else: $sSearch" >> $explainFile
       # if it has something to exclude run the exclusion
       if [[ "$sNotInclude" != "" ]]; then
         #echo "blah1"
@@ -819,11 +937,14 @@ function jsh() {
     fi
 
   else
+
+    echo "cat? $sSearch" >> $explainFile
     cat $sFileTarget
+
   fi
 
 }
 
-function promptjsh() {
-  echo "$@"
-}
+if [[ $# -gt 0 ]]; then
+  jsh -fzf $@
+fi

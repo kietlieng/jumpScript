@@ -13,14 +13,18 @@ function _jsh() {
 
   case "$state" in
       pos1)
-        # _values 'jump ssh' $(cat ~/lab/scripts/mappings/all.txt | fzf --ansi "$(promptjsh {q})")
-        _values 'jump ssh' $(cat ~/lab/scripts/mappings/all.txt | fzf --ansi | awk -F '^' '{print $1}')
-          # _values 'jump ssh' $(cat ~/.jumpscript | fzf --multi --ansi | awk -F '^' '{print $1}')
-          # return 0
+
+        # local jvalues=$(fzf --no-sort --tac --ansi --bind 'change:reload:jumpssh.sh {q}' --preview "bat --style=numbers --color=always --line-range :500 /tmp/jsh-explain")
+        local jvalues=$(fzf --no-sort --tac --ansi --bind 'change:reload:jumpssh.sh {q}' --preview "bat --style=numbers --color=always --line-range :500 /tmp/jsh-explain")
+
+        if [[ "$jvalues" != '' ]]; then
+          
+          local output=$(cat /tmp/jsh-query)
+          _values 'jump ssh' "-fzffeed"
+
+        fi
         ;;
 
   esac
 
 }
-
-# _jsh "$@"
