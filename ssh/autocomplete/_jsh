@@ -14,7 +14,9 @@ function _jsh() {
   case "$state" in
       pos1)
 
-        local jvalues=$(cat ~/lab/scripts/mappings/all.txt | fzf --no-sort --tac --ansi --bind 'change:reload:jumpssh.sh {q}' --preview "bat --style=numbers --color=always --line-range :500 /tmp/jsh-explain")
+        local jvalues=$(cat ~/lab/scripts/mappings/all.txt | \
+          fzf --no-sort --tac --ansi --bind 'change:reload:jumpssh.sh {q}' \
+              --preview "bat --style=numbers --color=always --line-range :500 /tmp/jsh-explain")
 
         if [[ "$jvalues" != '' ]]; then
           

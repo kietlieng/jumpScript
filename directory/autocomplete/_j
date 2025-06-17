@@ -16,7 +16,12 @@ function _j() {
   case "$state" in
       pos1)
 
-          local jvalues=$(cat ~/.jumpscript | fzf --no-sort --tac --ansi | awk -F '^' '{print $1}')
+          # local jvalues=$(cat ~/.jumpscript | fzf --no-sort --tac --ansi | awk -F '^' '{print $1}')
+          local jvalues=$(cat ~/.jumpscript | fzf --no-sort --tac --ansi \
+            --delimiter='^' \
+            --preview 'tree {2}' \
+            | awk -F '^' '{print $1}')
+            # --bind 'change:reload:{1}^' \
 
           if [[ "$jvalues" != '' ]]; then
 

@@ -212,7 +212,7 @@ function jsh() {
       cIndex=$(expr $cIndex + 1)
     done
 
-    echo "all args $@"
+    # echo "all args $@"
     key="$1"
     shift
 
@@ -752,7 +752,6 @@ function jsh() {
 
     elif [[ "$sConnect" = 'true' ]]; then
 
-      echo "in the list "
       #echo "counter $counter |$sCurrentURI|"
       # split on
       #echo "tmux value $sTmux"
