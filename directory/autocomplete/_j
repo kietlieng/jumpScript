@@ -17,7 +17,9 @@ function _j() {
       pos1)
 
           # local jvalues=$(cat ~/.jumpscript | fzf --no-sort --tac --ansi | awk -F '^' '{print $1}')
-          local jvalues=$(cat ~/.jumpscript | fzf --no-sort --tac --ansi \
+          # local jvalues=$(cat ~/.jumpscript | fzf --no-sort --tac --ansi \
+          local jvalues=$(cat ~/.jumpscript | fzf --no-sort --ansi \
+            --query "^" \
             --delimiter='^' \
             --preview 'tree {2}' \
             | awk -F '^' '{print $1}')
