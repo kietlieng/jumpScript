@@ -20,7 +20,7 @@ function _jsh() {
 
         if [[ "$jvalues" != '' ]]; then
           
-          _values 'jump ssh' "-fzffeed"
+          _values 'jump ssh' "-f"
 
         fi
         ;;

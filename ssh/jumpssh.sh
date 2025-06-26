@@ -3,7 +3,6 @@
 royal_debug_me=0
 royal_last_is_switch=1
 royal_last_is_empty=1
-royal_do_not_connect=0
 royal_list_command="echo "
 royal_delimiter_1="\^"
 royal_delimiter_2="\^"
@@ -17,6 +16,7 @@ alias jlc="jsh -l -c"
 alias jl="jsh -l"
 alias jtm="jsh -l -tm -c"
 alias jsht="jsh -tm"
+alias jshf="jsh -f"
 
 export royal_file_target=~/lab/scripts/mappings/all.txt
 export royal_file_pass_target=~/lab/scripts/mappings/passall.txt
@@ -29,7 +29,6 @@ function resetroyalsettings() {
   royal_debug_me=0
   royal_last_is_switch=1
   royal_last_is_empty=1
-  royal_do_not_connect=0
 
 }
 
@@ -197,13 +196,14 @@ function jsh() {
   shift
 
 
-  if [[ $key == '-fzffeed' ]]; then
+  if [[ $key == '-f' ]]; then
 
     # ignore all output
     while [[ $# -gt 0 ]]; do
       shift
     done
 
+    echo "$(cat $jshquery)"
     # leading args into param
     cIndex="1"
     for n in $(cat $jshquery); do
@@ -221,12 +221,17 @@ function jsh() {
     MODE_FZF='t'
     key="$1"
 
-    echo "$@" > $jshquery
+    if [[ $MODE_FZF ]]; then
+      echo "$@" > $jshquery
+    fi
+
     [[ $# -gt 0 ]] && shift
 
   else
 
-    echo "$@" > $jshquery
+    if [[ $MODE_FZF ]]; then
+      echo "$@" > $jshquery
+    fi
 
   fi
 
@@ -295,7 +300,7 @@ function jsh() {
 
   local defaultPing=10
   local sConnect='false'
-  local sCopyOutputCommand='false'
+  local sCopyOutputCommand=''
   local sDoc=0
   local sExecuteCommand=""
   local sInTM='false'
@@ -363,11 +368,6 @@ function jsh() {
         optGetDNS='t'
         echo "fetch value is $key" 
         ;;
-      '-f' ) # fake connect
-        royal_do_not_connect=1
-        echo "-f switch"
-        [[ $# -gt 0 ]] && shift
-        ;;
       '-s' ) # debug skip it
         [[ $# -gt 0 ]] && shift
         ;;
@@ -384,10 +384,16 @@ function jsh() {
           sPassword="p"
         fi
 
+        foundUser=$(isAWS $sCurrentURI)
+        if [[ $foundUser ]]; then
+          sUser=$foundUser
+        fi
+
         # remove from list
         sLastCommand="${sLastCommand/\-c/}"
         postfixValues="$postfixValues -c"
-
+  
+        echo "-c with user $sUser?" > $explainFile
 
         ;;
       '-n' )
@@ -513,7 +519,16 @@ function jsh() {
 
         [[ $# -gt 0 ]] && shift
         ;;
-      '-C' ) sCopyOutputCommand='true' ;;
+      '-C' ) 
+        sCopyOutputCommand='ip' 
+        postfixValues="$postfixValues -C"
+        echo "copy: ip" >> $explainFile
+        ;;
+      '-CC' ) 
+        sCopyOutputCommand='hostnameandip' 
+        postfixValues="$postfixValues -C"
+        echo "copy: name and ip" >> $explainFile
+        ;;
       '-r' ) sRefreshKnownKey='true' ;;
       '-pretty' ) sPrettyPrint='true' ;;
       '-p' ) # grab password
@@ -573,13 +588,10 @@ function jsh() {
         nextIsEmpty $1
         debugme "last command results is $royal_last_is_switch"
 
-        echo "user: $sUser" >> $explainFile
-
         [[ $# -gt 0 ]] && shift
 
         # is a switch then just assign the value
-        if [[ "$royal_last_is_switch" -eq "0" ]];
-        then
+        if [[ "$royal_last_is_switch" -eq "0" ]]; then
           debugme "is a switch assign etadm"
           sUser="etadm"
         elif [[ "$royal_last_is_empty" -eq "0" ]]; then
@@ -590,24 +602,25 @@ function jsh() {
         lastArg2=" $sUser"
         case $sUser in
           'root' )
-            echo "root user password"
+            # echo "root user password"
             sPassword="e"
             ;;
           'oracle' )
-            echo "oracle password"
+            # echo "oracle password"
             sPassword="o"
             ;;
           * )
             sPassword="p"
-            echo "no password assumed"
+            # echo "no password assumed"
             ;;
         esac
 
         sLastCommand="${sLastCommand/\-u/}"
         sLastCommand="${sLastCommand/$sUser/}"
         postfixValues="$postfixValues -u $sUser"
+        echo "user: $sUser" >> $explainFile
 
-        debugme "user is $sUser"
+        # debugme "user is $sUser"
 
         ;;
       '-t' ) # ping it
@@ -677,9 +690,12 @@ function jsh() {
   if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing" = 'true' || "$optGetDNS"  ]]; then
 
     # copy the output
-    if [[ $sCopyOutputCommand = 'true' ]]; then
-      S_COPY=$(grep -i $sSearch $sFileTarget)
-      echo -n "$S_COPY" | awk -F'^' '{ print $NF }' | tr -d '\n' | pbcopy
+    if [[ $sCopyOutputCommand == 'ip' ]]; then
+      local S_COPY=$(grep -i $sSearch $sFileTarget)
+      echo -n "$S_COPY" | awk -F'^' '{ print $2 }' | pbcopy
+    elif [[ $sCopyOutputCommand == 'hostnameandip' ]]; then
+      local S_COPY=$(grep -i $sSearch $sFileTarget)
+      echo -n "$S_COPY" | awk -F'^' '{ print $1 ": " $2 }' | pbcopy
     fi
 
     # if true don't interpret anything just run the command
@@ -859,46 +875,41 @@ function jsh() {
 
           echo "no pass $sSearch" >> $explainFile
           # echo "login: $sUser$sCurrentURI $sPassword" #'$sExecuteCommand'"
-          if [[ $royal_do_not_connect -eq "0" ]]; then
-            # restart service
-            if [[ $sServiceEnabled -eq "1" ]]; then
-              # echo "assh service"
-              assh $sUser$sCurrentURI $sPassword "$sServicePathPre/$sService/$sServicePathPost $sServiceType"
-            elif [[ "$sList" = "true" ]]; then
-              # echo "assh list services"
-              assh $sUser$sCurrentURI $sPassword "ls $sServicePathPre"
-            elif [[ "$sDoc" -eq "1" ]]; then
-              # echo "assh docker"
-              assh $sUser$sCurrentURI $sPassword "docker ps"
-            elif [[ "$sExecuteCommand" != "" ]]; then
-              # echo "assh execute"
-              assh $sUser$sCurrentURI $sPassword "$sExecuteCommand"
-            else
-              # echo "assh "
-              assh $sUser$sCurrentURI $sPassword #'$sExecuteCommand'
-            fi
+          # restart service
+          if [[ $sServiceEnabled -eq "1" ]]; then
+            # echo "assh service"
+            assh $sUser$sCurrentURI $sPassword "$sServicePathPre/$sService/$sServicePathPost $sServiceType"
+          elif [[ "$sList" = "true" ]]; then
+            # echo "assh list services"
+            assh $sUser$sCurrentURI $sPassword "ls $sServicePathPre"
+          elif [[ "$sDoc" -eq "1" ]]; then
+            # echo "assh docker"
+            assh $sUser$sCurrentURI $sPassword "docker ps"
+          elif [[ "$sExecuteCommand" != "" ]]; then
+            # echo "assh execute"
+            assh $sUser$sCurrentURI $sPassword "$sExecuteCommand"
+          else
+            # echo "assh "
+            assh $sUser$sCurrentURI $sPassword #'$sExecuteCommand'
           fi
 
         else
 
           echo "ssh $sUser$sCurrentURI" >> $explainFile
-          if [[ $royal_do_not_connect -eq "0" ]]; then
-
-            if [[ $sServiceEnabled -eq "1" ]]; then
-              echo "ssh services"
-              ssh $sUser$sCurrentURI "$sServicePathPre/$sService/$sServicePathPost $sServiceType"
-            elif [[ "$sDoc" -eq "1" ]]; then
-              echo "ssh stats"
-              ssh $sUser$sCurrentURI "docker ps"
-            elif [[ "$sExecuteCommand" != "" ]]; then
-              echo "ssh execute"
-              ssh $sUser$sCurrentURI "$sExecuteCommand"
-            else
-              echo "ssh"
-              ssh $sUser$sCurrentURI #'$sExecuteCommand'
-            fi
-
+          if [[ $sServiceEnabled -eq "1" ]]; then
+            echo "ssh services"
+            ssh $sUser$sCurrentURI "$sServicePathPre/$sService/$sServicePathPost $sServiceType"
+          elif [[ "$sDoc" -eq "1" ]]; then
+            echo "ssh stats"
+            ssh $sUser$sCurrentURI "docker ps"
+          elif [[ "$sExecuteCommand" != "" ]]; then
+            echo "ssh execute"
+            ssh $sUser$sCurrentURI "$sExecuteCommand"
+          else
+            echo "ssh"
+            ssh $sUser$sCurrentURI #'$sExecuteCommand'
           fi
+
         fi
       fi
 
