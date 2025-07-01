@@ -17,6 +17,7 @@ alias jl="jsh -l"
 alias jtm="jsh -l -tm -c"
 alias jsht="jsh -tm"
 alias jshf="jsh -f"
+alias jsf="jsh -f"
 
 export royal_file_target=~/lab/scripts/mappings/all.txt
 export royal_file_pass_target=~/lab/scripts/mappings/passall.txt
@@ -182,7 +183,7 @@ function jsh() {
 
 
   if [[ $# -eq 0 ]] ; then
-    echo 'No arguments'
+    echo "No arguments. Last query: \"$(cat $jshquery)\""
     return 0
   fi
 
