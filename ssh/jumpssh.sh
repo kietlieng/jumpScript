@@ -329,6 +329,8 @@ function jsh() {
   local optHead=0
   local optTail=100
   local optGetDNS=''
+  local modeSCP=''
+  local modeExtension=''
 
   if [[ "'$*'" = *-d* ]]; then
     royal_debug_me=1
@@ -395,6 +397,15 @@ function jsh() {
         postfixValues="$postfixValues -c"
   
         echo "-c with user $sUser?" > $explainFile
+
+        ;;
+      '-scp' )
+        modeSCP="$1"
+        modeExtension="$2"
+        shift
+        shift
+        postfixValues="$postfixValues -scp $modeSCP $modeExtension"
+        echo "scp: path $modeSCP/*.$modeExtension" >> $explainFile
 
         ;;
       '-n' )
@@ -688,7 +699,7 @@ function jsh() {
   echo "search term: $sSearch" >> $explainFile
 
   # manual seach
-  if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing" = 'true' || "$optGetDNS"  ]]; then
+  if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing" = 'true' || "$optGetDNS" || "$modeSCP" ]]; then
 
     # copy the output
     if [[ $sCopyOutputCommand == 'ip' ]]; then
@@ -729,7 +740,11 @@ function jsh() {
     fi
 
 
-    if [[ $optGetDNS ]]; then
+    if [[ $modeSCP ]]; then
+
+      scp "$sUser@$sCurrentURI:$modeSCP/*$modeExtension" .
+
+    elif [[ $optGetDNS ]]; then
 
       echo "ssearch |$sSearch| true"
       local ipAddress=$(nslookup $sSearch | grep -i "server" | head -n 1 | grep -o "[.+0-9]\+")
