@@ -3,7 +3,6 @@
 royal_debug_me=0
 royal_last_is_switch=1
 royal_last_is_empty=1
-royal_list_command="echo "
 royal_delimiter_1="\^"
 royal_delimiter_2="\^"
 royal_last_command=~/lab/scripts/mappings
@@ -166,11 +165,10 @@ function jsh() {
 
   local sFileTarget="$royal_file_target"
   local sFileProdTarget="$royal_file_prod_target"
-  local sFileProdPassTarget="$royal_file_prod_pass_target"
   local sLastFile="$royal_last_command/.jumplast"
+  local modeProduction=''
 
   local jshquery=/tmp/jsh-query
-  local explain=''
   local explainFile=/tmp/jsh-explain
   echo -n "" >  $explainFile
 
@@ -228,6 +226,14 @@ function jsh() {
 
     [[ $# -gt 0 ]] && shift
 
+  elif [[ $key == '-P' ]]; then
+
+    sFileTarget=$sFileProdTarget
+    modeProduction='t'
+
+    key="$1"
+    [[ $# -gt 0 ]] && shift
+
   else
 
     if [[ $MODE_FZF ]]; then
@@ -247,6 +253,7 @@ function jsh() {
     sLastCommand=$(echo "$sLastCommand" | sed -r "s/${userPortion}@//g")
     echo "$sLastCommand"
   fi
+
   #sSearch=$key
   #echo $sLastCommand
   #echo "$sSearch"
@@ -325,12 +332,10 @@ function jsh() {
   local sTmuxName=''
   local sUser=''
   local sUserManuallySet='false'
-  local modeProduction=''
   local optHead=0
   local optTail=100
   local optGetDNS=''
   local modeSCP=''
-  local modeExtension=''
 
   if [[ "'$*'" = *-d* ]]; then
     royal_debug_me=1
@@ -401,11 +406,9 @@ function jsh() {
         ;;
       '-scp' )
         modeSCP="$1"
-        modeExtension="$2"
         shift
-        shift
-        postfixValues="$postfixValues -scp $modeSCP $modeExtension"
-        echo "scp: path $modeSCP/*.$modeExtension" >> $explainFile
+        postfixValues="$postfixValues -scp $modeSCP"
+        echo "scp: path $modeSCP" >> $explainFile
 
         ;;
       '-n' )
@@ -450,6 +453,7 @@ function jsh() {
 
         ;;
       '-tm' )
+
         sTmux='true'
 
         # blank out the statements
@@ -543,7 +547,7 @@ function jsh() {
         ;;
       '-r' ) sRefreshKnownKey='true' ;;
       '-pretty' ) sPrettyPrint='true' ;;
-      '-p' ) # grab password
+      '-P' ) # grab password
         debugme "password"
         sPasswordSwitch='true'
         sConnect='true'
@@ -672,7 +676,7 @@ function jsh() {
       '-q' )
         sMysqlCommand='true'
         ;;
-      '-P' ) # use production list
+      '-p' ) # use production list
         sFileTarget=$sFileProdTarget
         modeProduction='t'
         ;;
@@ -689,6 +693,7 @@ function jsh() {
 
   done
 
+  echo "blah"
   # if not recall command and not in tmux
   if [[ "$sLast" = 'false' && "$sInTM" = 'false' ]]; then
     echo "$sLastCommand" > $sLastFile
@@ -701,6 +706,7 @@ function jsh() {
   # manual seach
   if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing" = 'true' || "$optGetDNS" || "$modeSCP" ]]; then
 
+    echo "blah1"
     # copy the output
     if [[ $sCopyOutputCommand == 'ip' ]]; then
       local S_COPY=$(grep -i $sSearch $sFileTarget)
@@ -715,17 +721,23 @@ function jsh() {
       sCurrentURI=$sSearch
       # list jump points
     else
+      echo "blah2"
       #echo "grep -i \"$sSearch\" $sFileTarget | grep -o \"${royal_delimiter_1}.*\" | awk -F${royal_delimiter_1} '{ print $2 }' | head -n 1)"
+      echo "file is $sFileTarget"
+      echo "searchterm $sSearch"
       sCurrentURI=$(grep -i "$sSearch" $sFileTarget | grep -o "${royal_delimiter_1}.*" | awk -F${royal_delimiter_1} '{ print $2 }' | head -n 1)
+      echo "blah2.5"
 
       if [[ "$sTmux" == "true" ]]; then
-        #echo "grep -i \"$sSearch\" $sFileTarget | grep -o \"${royal_delimiter_1}.*\" | awk -F${royal_delimiter_1} '{ print \$2 }'"
-        sCurrentURI=$(grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "${royal_delimiter_1}.*" | awk -F${royal_delimiter_1} '{ print $2 }')
+        echo "blah3"
+        echo "grep -i \"$sSearch\" $sFileTarget | grep -o \"${royal_delimiter_1}.*\" | awk -F${royal_delimiter_1} '{ print \$2 }'"
+        # sCurrentURI=$(grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "${royal_delimiter_1}.*" | awk -F${royal_delimiter_1} '{ print $2 }')
         echo "query $sCurrentURI"
       fi
 
       # not include in connection run command with inverse
       if [[ "$sNotInclude" != "" ]]; then
+        echo "blah4"
         debugme "not include is $sNotInclude"
         echo "not include"
         sCurrentURI=$(grep -i "$sSearch" $sFileTarget | grep -o "${royal_delimiter_1}.*" | grep -iv $sNotInclude | awk -F${royal_delimiter_1} '{ print $2 }')
@@ -739,10 +751,11 @@ function jsh() {
       fi
     fi
 
+    echo "blah5"
 
     if [[ $modeSCP ]]; then
 
-      scp "$sUser@$sCurrentURI:$modeSCP/*$modeExtension" .
+      scp "$sUser@$sCurrentURI:$modeSCP" .
 
     elif [[ $optGetDNS ]]; then
 
