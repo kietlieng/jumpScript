@@ -693,7 +693,6 @@ function jsh() {
 
   done
 
-  echo "blah"
   # if not recall command and not in tmux
   if [[ "$sLast" = 'false' && "$sInTM" = 'false' ]]; then
     echo "$sLastCommand" > $sLastFile
@@ -706,7 +705,6 @@ function jsh() {
   # manual seach
   if [[ "$sSearch" || $sManual = 'true' || $sCopyOutputCommand = 'true' || "$sPing" = 'true' || "$optGetDNS" || "$modeSCP" ]]; then
 
-    echo "blah1"
     # copy the output
     if [[ $sCopyOutputCommand == 'ip' ]]; then
       local S_COPY=$(grep -i $sSearch $sFileTarget)
@@ -721,23 +719,19 @@ function jsh() {
       sCurrentURI=$sSearch
       # list jump points
     else
-      echo "blah2"
       #echo "grep -i \"$sSearch\" $sFileTarget | grep -o \"${royal_delimiter_1}.*\" | awk -F${royal_delimiter_1} '{ print $2 }' | head -n 1)"
-      echo "file is $sFileTarget"
-      echo "searchterm $sSearch"
+      # echo "file is $sFileTarget"
+      # echo "searchterm $sSearch"
       sCurrentURI=$(grep -i "$sSearch" $sFileTarget | grep -o "${royal_delimiter_1}.*" | awk -F${royal_delimiter_1} '{ print $2 }' | head -n 1)
-      echo "blah2.5"
 
       if [[ "$sTmux" == "true" ]]; then
-        echo "blah3"
-        echo "grep -i \"$sSearch\" $sFileTarget | grep -o \"${royal_delimiter_1}.*\" | awk -F${royal_delimiter_1} '{ print \$2 }'"
-        # sCurrentURI=$(grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "${royal_delimiter_1}.*" | awk -F${royal_delimiter_1} '{ print $2 }')
+        echo "tmux grep -i \"$sSearch\" $sFileTarget | grep -o \"${royal_delimiter_1}.*\" | awk -F${royal_delimiter_1} '{ print \$2 }'"
+        sCurrentURI=$(grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "${royal_delimiter_1}.*" | awk -F${royal_delimiter_1} '{ print $2 }')
         echo "query $sCurrentURI"
       fi
 
       # not include in connection run command with inverse
       if [[ "$sNotInclude" != "" ]]; then
-        echo "blah4"
         debugme "not include is $sNotInclude"
         echo "not include"
         sCurrentURI=$(grep -i "$sSearch" $sFileTarget | grep -o "${royal_delimiter_1}.*" | grep -iv $sNotInclude | awk -F${royal_delimiter_1} '{ print $2 }')
@@ -751,7 +745,6 @@ function jsh() {
       fi
     fi
 
-    echo "blah5"
 
     if [[ $modeSCP ]]; then
 
@@ -771,16 +764,13 @@ function jsh() {
       # echo "fzf search term: $sSearch" >> $explainFile
       # if it has something to exclude run the exclusion
       if [[ "$sNotInclude" != "" ]]; then
-        # echo "blah1"
         grep -i "$sSearch" $sFileTarget | grep -iv $sNotInclude | sed "s/\$/:$postfixValues/"
       else
 
         if [[ "$sPrettyPrint" = 'true' ]]; then
-          # echo "blah2"
           grep -i "$sSearch" $sFileTarget | sed 's/\^.*=/=/g' | sed "s/\$/:$postfixValues/"
 
         else
-          # echo "blah3 $sSearch"
           grep -i "$sSearch" $sFileTarget | sed "s/\$/:$postfixValues/"
 
         fi
@@ -803,7 +793,6 @@ function jsh() {
       # if tmux option is true create the panes by passing the ip of the currentIP variable to jsh.
       # basically using jsh to create tmux sessions that will in affect call jsh
       if [[ "$sTmux" == "true" ]]; then
-        #echo "testing blah"
         #tmuxCommand=""
         # takes care of session names
         #                paneName=`date +"%y%m%d_%H%M%S"`
@@ -955,15 +944,12 @@ function jsh() {
       # echo "else: $sSearch" >> $explainFile
       # if it has something to exclude run the exclusion
       if [[ "$sNotInclude" != "" ]]; then
-        #echo "blah1"
         grep -i "$sSearch" $sFileTarget | grep -iv $sNotInclude
       else
 
         if [[ "$sPrettyPrint" = 'true' ]]; then
-          #echo "blah2"
           grep -i "$sSearch" $sFileTarget | sed 's/\^.*=/=/g'
         else
-          #echo "blah3"
           grep -i "$sSearch" $sFileTarget
         fi
 
