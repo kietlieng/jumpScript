@@ -18,7 +18,7 @@ alias jsht="jsh -tm"
 alias jshf="jsh -f"
 alias jsf="jsh -f"
 
-export royal_file_target=~/lab/scripts/mappings/all.txt
+export royal_file_target=~/lab/scripts/mappings/devall.txt
 export royal_file_pass_target=~/lab/scripts/mappings/passall.txt
 export royal_file_prod_target=~/lab/scripts/mappings/prodall.txt
 export royal_file_prod_pass_target=~/lab/scripts/mappings/passprodall.txt
