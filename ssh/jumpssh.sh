@@ -725,7 +725,7 @@ function jsh() {
       sCurrentURI=$(grep -i "$sSearch" $sFileTarget | grep -o "${royal_delimiter_1}.*" | awk -F${royal_delimiter_1} '{ print $2 }' | head -n 1)
 
       if [[ "$sTmux" == "true" ]]; then
-        echo "tmux grep -i \"$sSearch\" $sFileTarget | grep -o \"${royal_delimiter_1}.*\" | awk -F${royal_delimiter_1} '{ print \$2 }'"
+        # echo "tmux grep -i \"$sSearch\" $sFileTarget | grep -o \"${royal_delimiter_1}.*\" | awk -F${royal_delimiter_1} '{ print \$2 }'"
         sCurrentURI=$(grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "${royal_delimiter_1}.*" | awk -F${royal_delimiter_1} '{ print $2 }')
         echo "query $sCurrentURI"
       fi

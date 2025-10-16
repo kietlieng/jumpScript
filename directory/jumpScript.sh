@@ -271,11 +271,15 @@ function jfetch() {
 # jump to last location
 function jj() {
 
-    if [[ $# -gt 0 ]]; then
-      cd $(cat ~/.jumplast.${1})
-    else
-      cd $(cat ~/.jumplast)
-    fi
+  local jumpTo=""
+
+  if [[ $# -gt 0 ]]; then
+    jumpTo=$(cat ~/.jumplast.${1})
+  else
+    jumpTo=$(cat ~/.jumplast)
+  fi
+  cd "$jumpTo"
+
 }
 
 # mark working location
