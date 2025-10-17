@@ -52,22 +52,22 @@ function j
         return
       end
 
-      #DIRRESULT=$(ls -d $JUMPSCRIPTDIR/$JUMP_FILE/$1* 2> /dev/null | head -n 1)
+      #DIRRESULT=$(ls -d $JUMPSCRIPTDIR/$JUMP_FILE/$argv[1]* 2> /dev/null | head -n 1)
       #echo $DIRRESULT
       #return
 
       set -e JUMPPATH
-      #cd $(ls -d ~/$JUMP_FILE/$1* | head -n 1)
-      #echo "grep -i \"^$1$JUMP_DELIMITER_GREP\" ~/$JUMP_FILE"
-      set -gx JUMPPATH "$(grep -i "^$1$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
+      #cd $(ls -d ~/$JUMP_FILE/$argv[1]* | head -n 1)
+      #echo "grep -i \"^$argv[1]$JUMP_DELIMITER_GREP\" ~/$JUMP_FILE"
+      set -gx JUMPPATH "$(grep -i "^$argv[1]$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
 
       if [ -z $JUMPPATH ]
-#                echo "no such path $1"
+#                echo "no such path $argv[1]"
         set -gx JUMPPATH "$(grep -i "^$argv[1].*$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
       end
       #if [[ "$JUMPPATH" = "./" ]]
       if [ -z $JUMPPATH ]
-        # echo "no such path $1"
+        # echo "no such path $argv[1]"
         return
 
       else
@@ -221,7 +221,7 @@ end
 
 function jf
 
-  # echo "jlist | grep -i \"^$1.*$JUMP_DELIMITER_GREP\""
+  # echo "jlist | grep -i \"^$argv[1].*$JUMP_DELIMITER_GREP\""
   jlist | grep -i "$argv[1]"
 
 end
@@ -253,9 +253,9 @@ end
 
 # remove symbol link
 function jremove
-  # echo "grep -q \"^$1$JUMP_DELIMITER_GREP\" ~/$JUMP_FILE"
-  if grep -iq "^$1$JUMP_DELIMITER_GREP" ~/$JUMP_FILE
-    sed -i '' "/^$1$JUMP_DELIMITER_GREP/d" ~/$JUMP_FILE
+  echo "grep -q \"^$argv[1]$JUMP_DELIMITER_GREP\" ~/$JUMP_FILE"
+  if grep -iqr "^$argv[1]$JUMP_DELIMITER_GREP" ~/$JUMP_FILE
+    sed -i '' "/^$argv[1]$JUMP_DELIMITER_GREP/d" ~/$JUMP_FILE
   else
     echo "Entry does not exists in ~/$JUMP_FILE"
   end
