@@ -36,7 +36,7 @@ function j
   set modeOpen ''
 
   # check to see if directory exists
-  if [ $argv[1] ]
+  if test (count $argv) -gt 0
 
     if [ "$argv[1]" = "list" ]
       jlist
@@ -91,7 +91,7 @@ function j
     # this above with use symbol link xx then try to change directory into a* then b* then c*
     set modeOpen ''
 
-    while [ $argv ]
+    while test (count $argv) -gt 0
         
       set key $argv[1]
       set argv $argv[2..-1]
