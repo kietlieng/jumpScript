@@ -8,15 +8,15 @@ set -gx royal_delimiter_2 "\^"
 set -gx royal_last_command ~/lab/scripts/mappings
 set -gx MODE_FZF ''
 
-alias vijumplast="vim ~/lab/scripts/mappings/.jumplast"
-alias psht="jsh -P -tm"
-alias psh="jsh -P"
-alias jlc="jsh -l -c"
-alias jl="jsh -l"
-alias jtm="jsh -l -tm -c"
-alias jsht="jsh -tm"
-alias jshf="jsh -f"
-alias jsf="jsh -f"
+alias vijumplast "vim ~/lab/scripts/mappings/.jumplast"
+alias psht "jsh -P -tm"
+alias psh "jsh -P"
+alias jlc "jsh -l -c"
+alias jl "jsh -l"
+alias jtm "jsh -l -tm -c"
+alias jsht "jsh -tm"
+alias jshf "jsh -f"
+alias jsf "jsh -f"
 
 set -gx royal_file_target ~/lab/scripts/mappings/devall.txt
 set -gx royal_file_pass_target ~/lab/scripts/mappings/passall.txt
