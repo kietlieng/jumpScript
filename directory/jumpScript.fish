@@ -293,13 +293,12 @@ end
 # jump to last location
 function jj
 
-  set jumpTo ""
+  set jumpTo (cat ~/.jumplast)
 
   if [ $argv ]
-    set jumpTo $(cat ~/.jumplast.$argv[1])
-  else
-    set jumpTo $(cat ~/.jumplast)
+    set jumpTo (cat ~/.jumplast.$argv[1])
   end
+
   cd "$jumpTo"
 
 end
@@ -311,7 +310,7 @@ alias jwl="ls -1 ~/.jumplast*"
 # mark working location
 function jw
 
-  set lastLocal $(pwd)
+  set lastLocal (pwd)
   if [ $argv ]
     # clear it
     echo "$lastLocal" > ~/.jumplast.$argv[1]

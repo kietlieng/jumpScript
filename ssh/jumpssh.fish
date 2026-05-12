@@ -377,6 +377,7 @@ function jsh
       #
 
       case "-fetch"
+
         set optGetDNS 't'
         echo "fetch value is $key" 
       case '-s' # debug skip it
@@ -410,12 +411,14 @@ function jsh
         echo "-c with user $sUser?" > $explainFile
 
       case '-scp'
+
         set modeSCP "$argv[1]"
         set argv $argv[2..-1]
         set postfixValues "$postfixValues -scp $modeSCP"
         echo "scp: path $modeSCP" >> $explainFile
 
       case '-n'
+
         set sIndex "$argv[1]"
 
         if test (count $argv) -gt 0
@@ -423,16 +426,22 @@ function jsh
         end
 
       case '-ping'
+
         set defaultPing $argv[1]
         if test (count $argv) -gt 0
           set argv $argv[2..-1]
         end
 
       case '-inTM'
+
         set sInTM 'true'
+
       case '-list' # service
+
         set sList 'true'
+
       case '-et' # service
+
         # copy this command options to connect
         # if this hasn't been set already
         set sConnect 'true'
@@ -462,7 +471,6 @@ function jsh
           set argv $argv[2..-1]
         end
 
-
       case '-tm'
 
         set sTmux 'true'
@@ -478,6 +486,7 @@ function jsh
         # this doesn't work properly
 
       case '-tmu'
+
         set sTmux 'true'
         set sConnect 'true'
         set sUser "$argv[1]"
@@ -500,14 +509,11 @@ function jsh
           set argv $argv[2..-1]
         end
 
-
         # remove from list
         set sLastCommand string replace "-tmu" "" $sLastCommand
         set sLastCommand string replace "$sUser" "" $sLastCommand
 
         set postfixValues "$postfixValues -tmu $sUser"
-
-
 
       # this doesn't work properly
       case '-tmc'
@@ -533,8 +539,8 @@ function jsh
         set sLastCommand string replace "-tmc" "" $sLastCommand
         set postfixValues "$postfixValues -tmc"
 
-
       case '-tmn'
+
         set sTmux 'true'
         set sTmuxName "$argv[1]"
 
@@ -550,16 +556,21 @@ function jsh
         end
 
       case '-C' 
+
         set sCopyOutputCommand 'ip' 
         set postfixValues "$postfixValues -C"
         echo "copy: ip" >> $explainFile
+
       case '-CC' 
+
         set sCopyOutputCommand 'hostnameandip' 
         set postfixValues "$postfixValues -C"
         echo "copy: name and ip" >> $explainFile
+
       case '-r' set sRefreshKnownKey 'true' 
       case '-pretty' set sPrettyPrint 'true' 
       case '-P' # grab password
+
         debugme "password"
         set sPasswordSwitch 'true'
         set sConnect 'true'
@@ -571,6 +582,7 @@ function jsh
         end
 
       case '-j' # path zk
+
         set -gx copy_path ""
         switch $argv[1] 
           case 'local'
@@ -596,13 +608,18 @@ function jsh
         end
 
       case '-doc' # docker states
+
         set sDoc 1
+
       case '-ur' # user
+
         set sUser "root"
         set sConnect 'true'
         set sUserManuallySet 'true'
         set sPassword "e"
+
       case '-u' # user
+
         set sUser "$argv[1]"
         set sConnect 'true'
         set sUserManuallySet 'true'
@@ -644,13 +661,18 @@ function jsh
         # debugme "user is $sUser"
 
       case '-t' # ping it
+
         set sPing 'true'
         set sLastCommand string replace "-t" "" $sLastCommand
         set postfixValues "$postfixValues -t"
         echo "ping" >> $explainFile
+
       case '-m' # manually connect with the string
+
         set sManual 'true'
+
       case '-a' # add on to the search term
+
         set sSearch "$sSearch.*$argv[1]"
         debugme $sSearch
         if test (count $argv) -gt 0
@@ -658,6 +680,7 @@ function jsh
         end
 
       case '-v' # does not include
+
         set sNotInclude "$argv[1]"
         debugme "exclude $sNotInclude"
         if test (count $argv) -gt 0
@@ -665,6 +688,7 @@ function jsh
         end
 
       case '-exec' # record and quit
+
         set sExecuteCommand "$argv[1]"
         set lastArg2 " $sExecuteCommand"
         if test (count $argv) -gt 0
@@ -672,6 +696,7 @@ function jsh
         end
 
       case '-qq'
+
         set sMysqlCommand 'true'
         set sMysqlLogin "$argv[1]"
         set lastArg2 " $argv[1]"
@@ -680,15 +705,21 @@ function jsh
         end
 
       case '-q'
+
         set sMysqlCommand 'true'
+
       case '-p' # use production list
+
         set sFileTarget $sFileProdTarget
         set modeProduction 't'
+
       case '*'
+
         debugme "add to search $key"
         set lastArg1 ""
         set lastArg2 ""
         set sSearch "$sSearch.*$key"
+
     end
 
     # collect all args after the fact
@@ -698,8 +729,10 @@ function jsh
 
   # if not recall command and not in tmux
   if test "$sLast" = 'false' 
+
     and test "$sInTM" = 'false'
     echo "$sLastCommand" > $sLastFile
+
   end
 
 
@@ -716,26 +749,33 @@ function jsh
 
     # copy the output
     if [ "$sCopyOutputCommand" = 'ip' ]
+
       set S_COPY $(grep -i $sSearch $sFileTarget)
-      echo -n "$S_COPY" | awk -F'^' '{ print $2 }' | pbcopy
+      echo -n "$S_COPY" | awk -F'^' '{ print $2 }'  2>/dev/null | pbcopy
+
     else if [ "$sCopyOutputCommand" = 'hostnameandip' ]
+
       set S_COPY $(grep -i $sSearch $sFileTarget)
-      echo -n "$S_COPY" | awk -F'^' '{ print $argv[1] ": " $2 }' | pbcopy
+      echo -n "$S_COPY" | awk -F'^' '{ print $argv[1] ": " $2 }'  2>/dev/null | pbcopy
+
     end
 
     # if true don't interpret anything just run the command
     if [ "$sManual" = 'true' ]
+
       set sCurrentURI $sSearch
       # list jump points
+
     else
-      #echo "grep -i \"$sSearch\" $sFileTarget | grep -o \"$royal_delimiter_1.*\" | awk -F$royal_delimiter_1 '{ print $2 }' | head -n 1)"
+
+      #echo "grep -i \"$sSearch\" $sFileTarget | grep -o \"$royal_delimiter_1.*\" | awk -F$royal_delimiter_1 '{ print $2 }' 2>/dev/null | head -n 1)"
       # echo "file is $sFileTarget"
       # echo "searchterm $sSearch"
-      set sCurrentURI $(grep -i "$sSearch" $sFileTarget | grep -o "$royal_delimiter_1.*" | awk -F$royal_delimiter_1 '{ print $2 }' | head -n 1)
+      set sCurrentURI $(grep -i "$sSearch" $sFileTarget | grep -o "$royal_delimiter_1.*" | awk -F$royal_delimiter_1 '{ print $2 }' 2>/dev/null | head -n 1)
 
       if [ "$sTmux" = "true" ]
         # echo "tmux grep -i \"$sSearch\" $sFileTarget | grep -o \"$royal_delimiter_1.*\" | awk -F$royal_delimiter_1 '{ print \$2 }'"
-        set sCurrentURI (grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "$royal_delimiter_1.*" | awk -F$royal_delimiter_1 '{ print $2 }' | string collect)
+        set sCurrentURI (grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "$royal_delimiter_1.*" | awk -F$royal_delimiter_1 '{ print $2 }' 2>/dev/null | string collect)
         echo "query $sCurrentURI"
       end
 
@@ -743,15 +783,16 @@ function jsh
       if [ "$sNotInclude" != "" ]
         debugme "not include is $sNotInclude"
         echo "not include"
-        set sCurrentURI $(grep -i "$sSearch" $sFileTarget | grep -o "$royal_delimiter_1.*" | grep -iv $sNotInclude | awk -F$royal_delimiter_1 '{ print $2 }')
+        set sCurrentURI $(grep -i "$sSearch" $sFileTarget | grep -o "$royal_delimiter_1.*" | grep -iv $sNotInclude | awk -F$royal_delimiter_1 '{ print $2 }' 2>/dev/null )
         if [ $sIndex != "0" ]
-          set sCurrentURI $(echo $sCurrentURI ep -o "$royal_delimiter_1.*" | grep -iv $sNotInclude | awk -F$royal_delimiter_1 '{ print $2 }' | head -n $sIndex | tail -n 1)
+          set sCurrentURI $(echo $sCurrentURI ep -o "$royal_delimiter_1.*" | grep -iv $sNotInclude | awk -F$royal_delimiter_1 '{ print $2 }' 2>/dev/null | head -n $sIndex | tail -n 1)
         end
 
         if [ "$sTmux" = "true" ]
-          set sCurrentURI $(grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "$royal_delimiter_1.*" | grep -iv $sNotInclude |  awk -F$royal_delimiter_1 '{ print $2 }' )
+          set sCurrentURI $(grep -i "$sSearch" $sFileTarget | tail -n +$optHead | head -n $optTail | grep -o "$royal_delimiter_1.*" | grep -iv $sNotInclude |  awk -F$royal_delimiter_1 '{ print $2 }' 2>/dev/null )
         end
       end
+
     end
 
 
