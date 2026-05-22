@@ -334,3 +334,50 @@ function jc
   end
 
 end
+
+function jcp
+	
+  set -gx JUMP_FZF ''
+	set targetFile ''
+  #    set start `date +%s`
+
+  # check to see if directory exists
+  if test (count $argv) -gt 0
+
+    set targetFile $argv[1]
+
+		set argv $argv[2..-1]
+
+		jumpDirectoryExists
+		# quit if directory doesn not exists
+		if [ ! -f ~/$JUMP_FILE ]
+			echo "doesn't exists"
+			return
+		end
+
+		set -e JUMPPATH
+
+    set -gx JUMPPATH "$(grep -i "^$argv[1]$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
+
+    if [ -z $JUMPPATH ]
+#     echo "no such path $argv[1]"
+      set -gx JUMPPATH "$(grep -i "^$argv[1].*$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
+    end
+
+    if [ -z $JUMPPATH ]
+
+      # echo "no such path $argv[1]"
+      return
+
+    else
+
+      echo -e "copy $targetFile to $JUMPPATH\n"
+      cp -rf  $targetFile $JUMPPATH/.
+			ls -1tr $JUMPPATH
+
+    end
+
+  end
+
+
+end
