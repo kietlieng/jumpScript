@@ -56,24 +56,24 @@ function j
       #echo $DIRRESULT
       #return
 
-      set -e JUMPPATH
+      set -e jumpPath
       #cd $(ls -d ~/$JUMP_FILE/$argv[1]* | head -n 1)
       #echo "grep -i \"^$argv[1]$JUMP_DELIMITER_GREP\" ~/$JUMP_FILE"
-      set -gx JUMPPATH "$(grep -i "^$argv[1]$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
+      set -gx jumpPath "$(grep -i "^$argv[1]$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
 
-      if [ -z $JUMPPATH ]
+      if [ -z $jumpPath ]
 #                echo "no such path $argv[1]"
-        set -gx JUMPPATH "$(grep -i "^$argv[1].*$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
+        set -gx jumpPath "$(grep -i "^$argv[1].*$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
       end
-      #if [[ "$JUMPPATH" = "./" ]]
-      if [ -z $JUMPPATH ]
+      #if [[ "$jumpPath" = "./" ]]
+      if [ -z $jumpPath ]
         # echo "no such path $argv[1]"
         return
 
       else
 
-        echo "jumping to path $JUMPPATH"
-        cd $JUMPPATH
+        # echo "jumping to path $jumpPath"
+        cd $jumpPath
 
       end
 
@@ -107,16 +107,16 @@ function j
 
       else
 
-        set -gx JUMPPATH "$(find . -maxdepth 1 -iname "$key*" | sort | head -n 1)"
+        set -gx jumpPath "$(find . -maxdepth 1 -iname "$key*" | sort | head -n 1)"
 
-        if [ "$JUMPPATH" = "./" ]
+        if [ "$jumpPath" = "./" ]
           echo "no such path $key"
           return
         else
           # find . -maxdepth 1 -iname "$key*"
-          # echo "jump to |$JUMPPATH|"
-          if [ $JUMPPATH ]
-            cd $JUMPPATH
+          # echo "jump to |$jumpPath|"
+          if [ $jumpPath ]
+            cd $jumpPath
           else 
             echo "failed directory $key"
           end
@@ -127,22 +127,22 @@ function j
 
     if [ $JUMP_FZF ]
 
-      set -gx JUMP_OBJECT_RAW $(__fsel)
+      set -gx jumpObject_RAW $(__fsel)
       # trim trailing white spaces
-      set -gx JUMP_OBJECT (string trim --right $JUMP_OBJECT_RAW)
-      #echo "jumpobject |$JUMP_OBJECT|"
-      set -gx JUMPPATH $(pwd)
-      #echo "full path is $JUMPPATH/$JUMP_OBJECT"
+      set -gx jumpObject (string trim --right $jumpObject_RAW)
+      #echo "jumpobject |$jumpObject|"
+      set -gx jumpPath $(pwd)
+      #echo "full path is $jumpPath/$jumpObject"
 
       # check to see if it is a file
-      if [ -d "$JUMPPATH/$JUMP_OBJECT" ] then
-        #echo "object is directory $JUMPPATH/$JUMP_OBJECT"
-        cd $JUMP_OBJECT
-      else if [ -f "$JUMPPATH/$JUMP_OBJECT" ] then
-        #echo "object is file $JUMPPATH/$JUMP_OBJECT"
-        nvim $JUMP_OBJECT
+      if [ -d "$jumpPath/$jumpObject" ] then
+        #echo "object is directory $jumpPath/$jumpObject"
+        cd $jumpObject
+      else if [ -f "$jumpPath/$jumpObject" ] then
+        #echo "object is file $jumpPath/$jumpObject"
+        nvim $jumpObject
       else
-        echo "full path is $JUMPPATH/$JUMP_OBJECT is nether file or directory"
+        echo "full path is $jumpPath/$jumpObject is nether file or directory"
       end
 
     end
@@ -344,7 +344,8 @@ function jcp
   # check to see if directory exists
   if test (count $argv) -gt 0
 
-    set targetFile $argv[1]
+		set currentDir (pwd)
+    set targetFile "$currentDir/$argv[1]"
 
 		set argv $argv[2..-1]
 
@@ -355,25 +356,61 @@ function jcp
 			return
 		end
 
-		set -e JUMPPATH
+		set -e jumpPath
 
-    set -gx JUMPPATH "$(grep -i "^$argv[1]$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
+    set -gx jumpPath "$(grep -i "^$argv[1]$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
 
-    if [ -z $JUMPPATH ]
+		# no such path.  Now use grep
+    if [ -z $jumpPath ]
 #     echo "no such path $argv[1]"
-      set -gx JUMPPATH "$(grep -i "^$argv[1].*$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
+      set -gx jumpPath "$(grep -i "^$argv[1].*$JUMP_DELIMITER_GREP" ~/$JUMP_FILE | head -n 1 | awk -F'^' '{print $NF}' )"
     end
 
-    if [ -z $JUMPPATH ]
+		# still no path
+    if [ -z $jumpPath ]
 
       # echo "no such path $argv[1]"
       return
 
     else
 
-      echo -e "copy $targetFile to $JUMPPATH\n"
-      cp -rf  $targetFile $JUMPPATH/.
-			ls -1tr $JUMPPATH
+			# remove last key
+			set argv $argv[2..-1]
+			while test (count $argv) -gt 0
+					
+				set key $argv[1]
+				set argv $argv[2..-1]
+
+				if [ "$key" = "\/" ]
+
+					echo "forward slash"
+					set -gx JUMP_FZF 'true'
+
+				else
+
+					# echo "currentjumpPath |$jumpPath| with key $key"
+					set -gx newJump "$(find $jumpPath -maxdepth 1 -iname "$key*" | sort | head -n 1)"
+
+					if [ "$newJump" = "./" ]
+						# echo "no such path $key"
+						return
+					else
+						# find . -maxdepth 1 -iname "$key*"
+						# echo "jump to |$newJump|"
+						if [ $newJump ]
+							set jumpPath $newJump
+							# echo "jumpPath is $jumpPath"
+						else 
+							echo "failed directory $key"
+						end
+					end
+				end
+
+			end
+
+      echo -e "copy $targetFile to $jumpPath\n"
+			cp -rf  "$targetFile" "$jumpPath/."
+			ls -1tr $jumpPath
 
     end
 
